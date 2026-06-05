@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heineken Minority Report — AI Early Warning System</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Socket.IO client -->
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <!-- ═══════════════════════════  HEADER  ══════════════════════════════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="star-icon">★</div>
+        <div class="brand-text">
+          <span class="brand-heineken">HEINEKEN</span>
+          <span class="brand-subtitle">Minority Report · AI Early Warning System</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="live-badge"><span class="pulse"></span>LIVE</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════  HERO BANNER  ═══════════════════════════== -->
+  <div class="hero-banner">
+    <div class="hero-inner">
+      <h1 class="hero-title">Sell-Out Volume Risk Intelligence</h1>
+      <p class="hero-sub">AI Agent pipeline monitoring Modern Trade across pilot markets · Predicting 12-week volume decline probability</p>
+      <div class="market-tabs">
+        <button class="market-tab active" data-market="Netherlands">🇳🇱 Netherlands</button>
+        <button class="market-tab" data-market="Nigeria">🇳🇬 Nigeria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════  MAIN CONTENT  ══════════════════════════== -->
+  <main class="main">
+
+    <!-- ── KPI Row ───────────────────────────────────────────────────────── -->
+    <section class="kpi-row" id="kpi-row">
+      <div class="kpi-card" id="kpi-risk">
+        <div class="kpi-label">Risk Score</div>
+        <div class="kpi-value" id="kpi-risk-value">—</div>
+        <div class="kpi-sub" id="kpi-risk-sub">Awaiting agent run</div>
+      </div>
+      <div class="kpi-card" id="kpi-severity">
+        <div class="kpi-label">Severity</div>
+        <div class="kpi-value severity-badge" id="kpi-severity-value">—</div>
+        <div class="kpi-sub">Model confidence: AI weighted composite</div>
+      </div>
+      <div class="kpi-card" id="kpi-quality">
+        <div class="kpi-label">Data Quality</div>
+        <div class="kpi-value" id="kpi-quality-value">—</div>
+        <div class="kpi-sub">6 source streams monitored</div>
+      </div>
+      <div class="kpi-card" id="kpi-alerts">
+        <div class="kpi-label">Active Alerts</div>
+        <div class="kpi-value" id="kpi-alerts-value">—</div>
+        <div class="kpi-sub" id="kpi-alerts-sub">No run yet</div>
+      </div>
+    </section>
+
+    <!-- ── Two-column layout ─────────────────────────────────────────────── -->
+    <div class="grid-2col">
+
+      <!-- LEFT: Risk Gauge + Agent Pipeline ─────────────────────────────── -->
+      <div class="col-left">
+
+        <!-- Risk Gauge -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-icon">⚠️</span>
+            <h2>Sell-Out Risk Gauge</h2>
+            <button class="run-btn" id="run-btn" onclick="runAgents()">▶ Run Agent Pipeline</button>
+          </div>
+          <div class="gauge-wrap">
+            <canvas id="gaugeChart" width="300" height="160"></canvas>
+            <div class="gauge-overlay">
+              <div class="gauge-score" id="gauge-score">—</div>
+              <div class="gauge-label" id="gauge-label">Click Run to analyse</div>
+            </div>
+          </div>
+          <!-- Risk Components bar chart -->
+          <div class="risk-components" id="risk-components" style="display:none">
+            <h3>Risk Component Breakdown</h3>
+            <canvas id="componentsChart" height="160"></canvas>
+          </div>
+        </div>
+
+        <!-- Agent Pipeline Visualizer -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-icon">🤖</span>
+            <h2>AI Agent Pipeline</h2>
+          </div>
+          <div class="pipeline" id="pipeline">
+            <div class="pipeline-step" id="step-ingestion" data-phase="ingestion">
+              <div class="step-icon">📥</div>
+              <div class="step-info">
+                <div class="step-name">Data Ingestion Agent</div>
+                <div class="step-desc">POS · ATL · BTL · Pricing · Distribution · Macro</div>
+              </div>
+              <div class="step-status idle">IDLE</div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step" id="step-risk" data-phase="risk">
+              <div class="step-icon">⚠️</div>
+              <div class="step-info">
+                <div class="step-name">Risk Detection Agent</div>
+                <div class="step-desc">Composite risk score · Top drivers · Severity</div>
+              </div>
+              <div class="step-status idle">IDLE</div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step" id="step-alert" data-phase="alert">
+              <div class="step-icon">🔔</div>
+              <div class="step-info">
+                <div class="step-name">Alert Agent</div>
+                <div class="step-desc">Stakeholder routing · Severity grading · Channels</div>
+              </div>
+              <div class="step-status idle">IDLE</div>
+            </div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step" id="step-recommendation" data-phase="recommendation">
+              <div class="step-icon">💡</div>
+              <div class="step-info">
+                <div class="step-name">Recommendation Agent</div>
+                <div class="step-desc">Ranked actions · ROI estimates · Owner assignment</div>
+              </div>
+              <div class="step-status idle">IDLE</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- RIGHT: Live Log + Data Sources ──────────────────────────────────── -->
+      <div class="col-right">
+
+        <!-- Live Agent Log -->
+        <div class="card log-card">
+          <div class="card-header">
+            <span class="card-icon">🖥</span>
+            <h2>Live Agent Reasoning Log</h2>
+            <span class="log-count" id="log-count">0 entries</span>
+          </div>
+          <div class="log-scroll" id="agent-log">
+            <div class="log-placeholder">Agent logs will stream here when you run the pipeline…</div>
+          </div>
+        </div>
+
+        <!-- Data Source Freshness -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-icon">📊</span>
+            <h2>Data Source Quality Matrix</h2>
+          </div>
+          <table class="source-table" id="source-table">
+            <thead>
+              <tr><th>Source</th><th>Freshness</th><th>Quality</th><th>Weight</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>POS</td><td>W-1 (7d lag)</td><td><span class="quality high">HIGH</span></td><td>30%</td></tr>
+              <tr><td>ATL</td><td>W-0 (weekly)</td><td><span class="quality high">HIGH</span></td><td>15%</td></tr>
+              <tr><td>BTL</td><td>Sporadic (21d lag)</td><td><span class="quality med">MEDIUM</span></td><td>10%</td></tr>
+              <tr><td>Pricing &amp; Promo</td><td>W-1 (weekly)</td><td><span class="quality high">HIGH</span></td><td>20%</td></tr>
+              <tr><td>Distribution</td><td>Daily</td><td><span class="quality high">HIGH</span></td><td>15%</td></tr>
+              <tr><td>Macro</td><td>Monthly</td><td><span class="quality low">LOW</span></td><td>10%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- /col-right -->
+    </div>
+
+    <!-- ── Alerts Section ────────────────────────────────────────────────── -->
+    <section class="card" id="alerts-section" style="display:none">
+      <div class="card-header">
+        <span class="card-icon">🔔</span>
+        <h2>Active Alerts</h2>
+        <span class="alert-count" id="alert-badge">0</span>
+      </div>
+      <div class="alerts-grid" id="alerts-grid"></div>
+    </section>
+
+    <!-- ── Recommendations Section ───────────────────────────────────────── -->
+    <section class="card" id="recs-section" style="display:none">
+      <div class="card-header">
+        <span class="card-icon">💡</span>
+        <h2>AI Recommended Actions</h2>
+        <span class="recs-meta">Ranked by priority · Includes ROI estimate</span>
+      </div>
+      <div class="recs-grid" id="recs-grid"></div>
+    </section>
+
+    <!-- ── Risk Trend Chart ──────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-header">
+        <span class="card-icon">📈</span>
+        <h2>12-Week Risk Trend</h2>
+      </div>
+      <canvas id="trendChart" height="80"></canvas>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════  FOOTER  ════════════════════════════════= -->
+  <footer class="footer">
+    <div>Heineken Minority Report · AI Early Warning System · POC Demo v1.0</div>
+    <div>Responsible AI: All recommendations require human review before execution · © Heineken 2026</div>
+  </footer>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
