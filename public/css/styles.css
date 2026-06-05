@@ -484,11 +484,14 @@ body {
 
 .rec-card {
   border-radius: 10px;
-  padding: 1.1rem 1.25rem;
+  padding: 1.1rem 1.25rem 0.9rem;
   border: 1px solid var(--gray-200);
   background: var(--gray-100);
   position: relative;
   transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .rec-card:hover { box-shadow: var(--shadow-lg); }
@@ -506,24 +509,136 @@ body {
   letter-spacing: 0.5px;
 }
 
+.rec-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
 .rec-category {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--green-dark);
-  margin-bottom: 6px;
-  margin-top: 4px;
 }
 
-.rec-action { font-size: 0.9rem; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
-.rec-rationale { font-size: 0.78rem; color: var(--gray-700); line-height: 1.5; margin-bottom: 10px; }
+/* Confidence badge */
+.rec-conf {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+.conf-high { background: #dcfce7; color: #166534; }
+.conf-med  { background: #fef3c7; color: #92400e; }
+.conf-low  { background: #fee2e2; color: #991b1b; }
+
+.rec-action {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.4;
+}
+
+/* ── Evidence section ── */
+.ev-section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.ev-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.ev-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--gray-400);
+}
+
+.ev-badges { display: flex; gap: 5px; }
+
+.ev-breach-count {
+  font-size: 0.67rem;
+  font-weight: 800;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 1px 7px;
+  border-radius: 8px;
+}
+
+.ev-warn-count {
+  font-size: 0.67rem;
+  font-weight: 800;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 7px;
+  border-radius: 8px;
+}
+
+.ev-grid { display: flex; flex-direction: column; gap: 3px; }
+
+.ev-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto auto auto auto;
+  gap: 4px;
+  align-items: baseline;
+  padding: 3px 4px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+}
+
+.ev-row.ev-breach { background: #fef2f2; }
+.ev-row.ev-warn   { background: #fffbeb; }
+.ev-row.ev-ok     { background: transparent; }
+
+.ev-icon   { font-size: 0.65rem; text-align: center; }
+.ev-signal { color: var(--gray-700); font-weight: 600; }
+.ev-observed {
+  font-weight: 800;
+  color: var(--gray-900);
+  white-space: nowrap;
+}
+.ev-row.ev-breach .ev-observed { color: #dc2626; }
+.ev-row.ev-warn   .ev-observed { color: #ca8a04; }
+
+.ev-sep { color: var(--gray-400); font-size: 0.65rem; }
+.ev-threshold { color: var(--gray-400); white-space: nowrap; font-style: italic; }
+.ev-src {
+  font-size: 0.63rem;
+  color: var(--gray-400);
+  background: var(--gray-200);
+  padding: 1px 5px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ── Reasoning ── */
+.rec-reasoning {
+  font-size: 0.78rem;
+  color: var(--gray-700);
+  line-height: 1.55;
+  border-left: 3px solid var(--green);
+  padding-left: 8px;
+  background: var(--green-light);
+  border-radius: 0 6px 6px 0;
+  padding: 0.5rem 0.7rem;
+}
 
 .rec-metrics {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
 }
 
 .rec-metric {
@@ -536,20 +651,28 @@ body {
 .rec-metric-value { font-weight: 700; color: var(--green-dark); }
 
 .rec-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   font-size: 0.72rem;
   color: var(--gray-400);
   border-top: 1px solid var(--gray-200);
-  padding-top: 8px;
-  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.rec-kpi { color: var(--green-dark); font-weight: 600; }
+
+.rec-owner {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .effort-badge {
   padding: 2px 8px;
   border-radius: 10px;
   font-weight: 700;
+  font-size: 0.68rem;
 }
 
 .effort-LOW    { background: #dcfce7; color: #166534; }

@@ -311,12 +311,47 @@ function renderRecommendations(recs) {
   grid.innerHTML = '';
 
   recs.forEach(r => {
+    const confClass = r.confidence === 'HIGH' ? 'conf-high' : r.confidence === 'MEDIUM' ? 'conf-med' : 'conf-low';
+    const breachSummary = r.breachCount > 0
+      ? `<span class="ev-breach-count">${r.breachCount} breach${r.breachCount > 1 ? 'es' : ''}</span>`
+      : '';
+    const warnSummary = r.warningCount > 0
+      ? `<span class="ev-warn-count">${r.warningCount} warning${r.warningCount > 1 ? 's' : ''}</span>`
+      : '';
+
+    const evidenceRows = (r.evidence || []).map(e => {
+      const statusIcon = e.status === 'BREACH' ? '🔴' : e.status === 'WARNING' ? '🟡' : '🟢';
+      const statusCls  = e.status === 'BREACH' ? 'ev-breach' : e.status === 'WARNING' ? 'ev-warn' : 'ev-ok';
+      return `
+        <div class="ev-row ${statusCls}">
+          <span class="ev-icon">${statusIcon}</span>
+          <span class="ev-signal">${escapeHtml(e.signal)}</span>
+          <span class="ev-observed">${escapeHtml(e.observed)}</span>
+          <span class="ev-sep">vs</span>
+          <span class="ev-threshold">${escapeHtml(e.threshold)}</span>
+          <span class="ev-src">${escapeHtml(e.dataSource)}</span>
+        </div>`;
+    }).join('');
+
     grid.innerHTML += `
       <div class="rec-card">
         <div class="rec-priority">#${r.priority} Priority</div>
-        <div class="rec-category">${escapeHtml(r.category)}</div>
+        <div class="rec-header-row">
+          <div class="rec-category">${escapeHtml(r.category)}</div>
+          <div class="rec-conf ${confClass}">${r.confidence || '—'} confidence</div>
+        </div>
         <div class="rec-action">${escapeHtml(r.action)}</div>
-        <div class="rec-rationale">${escapeHtml(r.rationale)}</div>
+
+        <div class="ev-section">
+          <div class="ev-header">
+            <span class="ev-title">📋 Evidence</span>
+            <div class="ev-badges">${breachSummary}${warnSummary}</div>
+          </div>
+          <div class="ev-grid">${evidenceRows}</div>
+        </div>
+
+        <div class="rec-reasoning">${escapeHtml(r.reasoning)}</div>
+
         <div class="rec-metrics">
           <div class="rec-metric">
             <span class="rec-metric-label">Volume Recovery</span>
@@ -332,9 +367,9 @@ function renderRecommendations(recs) {
           </div>
         </div>
         <div class="rec-footer">
-          <span>👤 ${escapeHtml(r.owner)}</span>
-          <span class="effort-badge effort-${r.effort}">${r.effort} effort</span>
+          <span class="rec-kpi">🎯 ${escapeHtml(r.kpi)}</span>
         </div>
+        <div class="rec-owner">👤 ${escapeHtml(r.owner)} · <span class="effort-badge effort-${r.effort}">${r.effort} effort</span></div>
       </div>`;
   });
 
