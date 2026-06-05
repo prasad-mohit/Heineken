@@ -3,242 +3,274 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Heineken · Minority Report</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-  <link rel="stylesheet" href="/css/styles.css" />
+  <title>Heineken — AI Early Warning System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- TOP NAV -->
-  <nav class="topnav">
-    <div class="topnav-left">
-      <div class="hk-logo">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <polygon points="11,1 13.5,7.5 20.5,7.5 15,12 17,18.5 11,14.5 5,18.5 7,12 1.5,7.5 8.5,7.5" fill="#FFC72C"/>
-        </svg>
+<!-- ── Top Header ─────────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="logo-badge">H</div>
+      <div>
+        <div class="brand-name">Heineken</div>
+        <div class="brand-sub">AI Early Warning System — Commercial Intelligence</div>
       </div>
-      <span class="topnav-brand">HEINEKEN</span>
-      <span class="topnav-sep">|</span>
-      <span class="topnav-product">Minority Report</span>
     </div>
-    <div class="topnav-right">
-      <div class="live-pill"><span class="live-dot"></span>Live</div>
-      <div class="topnav-date" id="topnav-date"></div>
-      <a href="/presentation.html" class="topnav-btn">View Deck →</a>
-    </div>
-  </nav>
-
-  <!-- MARKET SELECTOR BAR -->
-  <div class="market-bar">
-    <div class="market-bar-inner">
-      <span class="market-bar-label">Pilot Market</span>
-      <div class="market-tabs" id="market-tabs">
-        <button class="mtab active" data-market="Netherlands">
-          <span class="mtab-flag">🇳🇱</span><span>Netherlands</span>
-        </button>
-        <button class="mtab" data-market="Nigeria">
-          <span class="mtab-flag">🇳🇬</span><span>Nigeria</span>
-        </button>
-      </div>
-      <div class="market-bar-meta">Modern Trade · 12-week horizon</div>
-      <button class="run-btn" id="run-btn" onclick="runAgents()">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="3,1 13,7 3,13" fill="currentColor"/></svg>
-        Run Pipeline
+    <div class="header-controls">
+      <label class="ctrl-label" for="marketSelect">Market</label>
+      <select id="marketSelect" class="market-select">
+        <option value="Netherlands">🇳🇱 Netherlands</option>
+        <option value="Belgium">🇧🇪 Belgium</option>
+        <option value="Germany">🇩🇪 Germany</option>
+        <option value="Poland">🇵🇱 Poland</option>
+        <option value="Spain">🇪🇸 Spain</option>
+        <option value="Nigeria">🇳🇬 Nigeria</option>
+      </select>
+      <button id="runBtn" class="run-btn">
+        <span class="run-icon">▶</span>
+        <span id="runLabel">Run Pipeline</span>
       </button>
+      <div id="statusBadge" class="status-badge status-idle">Idle</div>
     </div>
   </div>
-
-  <!-- MAIN LAYOUT -->
-  <div class="shell">
-
-    <!-- ═══ LEFT SIDEBAR: Pipeline + Log ═══ -->
-    <aside class="sidebar">
-
-      <!-- Pipeline -->
-      <div class="panel">
-        <div class="panel-title">Agent Pipeline</div>
-        <div class="pipeline" id="pipeline">
-          <div class="p-step" id="step-ingestion" data-phase="ingestion">
-            <div class="p-step-track">
-              <div class="p-dot"></div>
-              <div class="p-line"></div>
-            </div>
-            <div class="p-step-body">
-              <div class="p-step-name">Data Ingestion</div>
-              <div class="p-step-desc">POS · ATL · BTL · Pricing · Distribution · Macro</div>
-              <div class="p-step-badge idle" id="badge-ingestion">Idle</div>
-            </div>
-          </div>
-          <div class="p-step" id="step-risk" data-phase="risk">
-            <div class="p-step-track">
-              <div class="p-dot"></div>
-              <div class="p-line"></div>
-            </div>
-            <div class="p-step-body">
-              <div class="p-step-name">Risk Detection</div>
-              <div class="p-step-desc">Composite score · Severity · Top drivers</div>
-              <div class="p-step-badge idle" id="badge-risk">Idle</div>
-            </div>
-          </div>
-          <div class="p-step" id="step-alert" data-phase="alert">
-            <div class="p-step-track">
-              <div class="p-dot"></div>
-              <div class="p-line"></div>
-            </div>
-            <div class="p-step-body">
-              <div class="p-step-name">Alert Routing</div>
-              <div class="p-step-desc">Severity grading · Stakeholder dispatch</div>
-              <div class="p-step-badge idle" id="badge-alert">Idle</div>
-            </div>
-          </div>
-          <div class="p-step last" id="step-recommendation" data-phase="recommendation">
-            <div class="p-step-track">
-              <div class="p-dot"></div>
-            </div>
-            <div class="p-step-body">
-              <div class="p-step-name">Recommendations</div>
-              <div class="p-step-desc">Evidence-gated · ROI-ranked · Owner-assigned</div>
-              <div class="p-step-badge idle" id="badge-recommendation">Idle</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Sources -->
-      <div class="panel">
-        <div class="panel-title">Signal Sources</div>
-        <table class="src-table" id="src-table">
-          <thead>
-            <tr><th>Source</th><th>Freshness</th><th>Quality</th><th>Wt</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>POS</td><td>W-1 · 7d lag</td><td><span class="q-dot high"></span>HIGH</td><td>30%</td></tr>
-            <tr><td>ATL</td><td>W-0 · weekly</td><td><span class="q-dot high"></span>HIGH</td><td>15%</td></tr>
-            <tr><td>BTL</td><td>Sporadic · 21d</td><td><span class="q-dot med"></span>MED</td><td>10%</td></tr>
-            <tr><td>Pricing</td><td>W-1 · weekly</td><td><span class="q-dot high"></span>HIGH</td><td>20%</td></tr>
-            <tr><td>Distribution</td><td>Daily</td><td><span class="q-dot high"></span>HIGH</td><td>15%</td></tr>
-            <tr><td>Macro</td><td>Monthly</td><td><span class="q-dot low"></span>LOW</td><td>10%</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Agent Log -->
-      <div class="panel log-panel">
-        <div class="panel-title">
-          Agent Log
-          <span class="log-meta" id="log-meta">0 entries</span>
-        </div>
-        <div class="log-body" id="log-body">
-          <div class="log-empty">Run the pipeline to see live agent reasoning…</div>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- ═══ MAIN CONTENT ═══ -->
-    <main class="content">
-
-      <!-- KPI STRIP -->
-      <div class="kpi-strip">
-        <div class="kpi" id="kpi-risk">
-          <div class="kpi-num" id="kv-risk">—</div>
-          <div class="kpi-label">Risk Score</div>
-          <div class="kpi-sub" id="ks-risk">awaiting run</div>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi" id="kpi-sev">
-          <div class="kpi-num" id="kv-sev">—</div>
-          <div class="kpi-label">Severity</div>
-          <div class="kpi-sub">composite AI signal</div>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi" id="kpi-qual">
-          <div class="kpi-num" id="kv-qual">—</div>
-          <div class="kpi-label">Data Quality</div>
-          <div class="kpi-sub">6 sources weighted</div>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi" id="kpi-alerts">
-          <div class="kpi-num" id="kv-alerts">—</div>
-          <div class="kpi-label">Alerts</div>
-          <div class="kpi-sub" id="ks-alerts">no run yet</div>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi" id="kpi-recs">
-          <div class="kpi-num" id="kv-recs">—</div>
-          <div class="kpi-label">Actions</div>
-          <div class="kpi-sub" id="ks-recs">no run yet</div>
-        </div>
-      </div>
-
-      <!-- GAUGE + COMPONENTS -->
-      <div class="row-2col">
-
-        <div class="card gauge-card">
-          <div class="card-hd">Sell-Out Risk</div>
-          <div class="gauge-wrap">
-            <canvas id="gaugeCanvas" width="260" height="140"></canvas>
-            <div class="gauge-center">
-              <div class="gauge-num" id="gauge-num">—</div>
-              <div class="gauge-sev" id="gauge-sev">Click Run</div>
-            </div>
-          </div>
-          <!-- Severity scale -->
-          <div class="sev-scale">
-            <span class="sev-item low">LOW<br/><small>0–34</small></span>
-            <span class="sev-item medium">MED<br/><small>35–54</small></span>
-            <span class="sev-item high">HIGH<br/><small>55–74</small></span>
-            <span class="sev-item critical">CRIT<br/><small>75–100</small></span>
-          </div>
-        </div>
-
-        <div class="card components-card" id="components-card">
-          <div class="card-hd">Risk Drivers</div>
-          <div class="components-empty" id="comp-empty">Run pipeline to see signal breakdown</div>
-          <div id="comp-bars" style="display:none">
-            <canvas id="compChart" height="160"></canvas>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- TREND CHART -->
-      <div class="card trend-card">
-        <div class="card-hd">12-Week Risk Trend <span class="card-hd-market" id="trend-market-label"></span></div>
-        <canvas id="trendChart" height="65"></canvas>
-      </div>
-
-      <!-- ALERTS -->
-      <div id="alerts-section" style="display:none">
-        <div class="section-hd">
-          <span>Active Alerts</span>
-          <span class="section-count" id="alert-count">0</span>
-        </div>
-        <div class="alerts-grid" id="alerts-grid"></div>
-      </div>
-
-      <!-- RECOMMENDATIONS -->
-      <div id="recs-section" style="display:none">
-        <div class="section-hd">
-          <span>AI Recommendations</span>
-          <span class="section-meta">Evidence-gated · Threshold-triggered · Confidence-scored</span>
-        </div>
-        <div class="recs-list" id="recs-list"></div>
-      </div>
-
-    </main>
+  <!-- Pipeline progress bar -->
+  <div class="pipeline-bar">
+    <div class="pipe-steps">
+      <div class="pipe-step" id="ps-signal_normalization"><span class="ps-dot"></span>Signal Intelligence</div>
+      <div class="pipe-sep">›</div>
+      <div class="pipe-step" id="ps-model_conflicts"><span class="ps-dot"></span>Model Conflicts</div>
+      <div class="pipe-sep">›</div>
+      <div class="pipe-step" id="ps-twin_markets"><span class="ps-dot"></span>Twin Markets</div>
+      <div class="pipe-sep">›</div>
+      <div class="pipe-step" id="ps-risk_detection"><span class="ps-dot"></span>Risk Score</div>
+      <div class="pipe-sep">›</div>
+      <div class="pipe-step" id="ps-recommendations"><span class="ps-dot"></span>Recommendations</div>
+      <div class="pipe-sep">›</div>
+      <div class="pipe-step" id="ps-alerts"><span class="ps-dot"></span>Alerts</div>
+    </div>
   </div>
+</header>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <span>Heineken Minority Report · AI Early Warning System · POC v1.0</span>
-    <span>All recommendations require human review before execution · Responsible AI by design</span>
-  </footer>
+<div class="layout">
 
-  <script src="/js/dashboard.js"></script>
+  <!-- ── Left sidebar: nav + agent log ────────────────────────────────────── -->
+  <aside class="sidebar">
+    <nav class="section-nav">
+      <a href="#sec-kpi"       class="nav-item active">Overview</a>
+      <a href="#sec-signals"   class="nav-item">Signal Intelligence</a>
+      <a href="#sec-conflicts" class="nav-item">Model Conflicts</a>
+      <a href="#sec-region"    class="nav-item">Region &amp; Teams</a>
+      <a href="#sec-twins"     class="nav-item">Twin Markets</a>
+      <a href="#sec-recs"      class="nav-item">Recommendations</a>
+    </nav>
+
+    <div class="sidebar-log">
+      <div class="log-header">
+        <span>Agent Reasoning Log</span>
+        <button id="clearLogBtn" class="log-clear">Clear</button>
+      </div>
+      <div id="agentLog" class="log-body">
+        <div class="log-placeholder">Run the pipeline to see reasoning logs from each agent.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- KPI strip -->
+    <section id="sec-kpi" class="content-section">
+      <div class="section-header">
+        <h2>Command Centre</h2>
+        <span id="selectedMarketLabel" class="market-chip">🇳🇱 Netherlands</span>
+      </div>
+      <div class="kpi-strip">
+        <div class="kpi-card" id="kpi-risk">
+          <div class="kpi-label">Risk Score</div>
+          <div class="kpi-value kpi-neutral" id="kpiRiskValue">—</div>
+          <div class="kpi-sub" id="kpiRiskSev">Run pipeline</div>
+        </div>
+        <div class="kpi-card" id="kpi-signals">
+          <div class="kpi-label">Signal Quality</div>
+          <div class="kpi-value kpi-neutral" id="kpiSigValue">—</div>
+          <div class="kpi-sub" id="kpiSigSub">6 sources</div>
+        </div>
+        <div class="kpi-card" id="kpi-conflicts">
+          <div class="kpi-label">Model Conflicts</div>
+          <div class="kpi-value kpi-neutral" id="kpiConflictValue">—</div>
+          <div class="kpi-sub" id="kpiConflictSub">MMM · Pricing · Dist</div>
+        </div>
+        <div class="kpi-card" id="kpi-twins">
+          <div class="kpi-label">Top Twin Market</div>
+          <div class="kpi-value kpi-neutral" id="kpiTwinValue">—</div>
+          <div class="kpi-sub" id="kpiTwinSub">Similarity score</div>
+        </div>
+        <div class="kpi-card" id="kpi-recs">
+          <div class="kpi-label">Actions Required</div>
+          <div class="kpi-value kpi-neutral" id="kpiRecValue">—</div>
+          <div class="kpi-sub">with ROI &gt; 1x</div>
+        </div>
+      </div>
+
+      <!-- Risk gauge -->
+      <div class="gauge-row">
+        <div class="gauge-card">
+          <div class="gauge-title">Risk Severity</div>
+          <div class="gauge-wrap">
+            <svg id="riskGaugeSvg" viewBox="0 0 220 130" class="gauge-svg">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#16a34a"/>
+                  <stop offset="40%"  stop-color="#ca8a04"/>
+                  <stop offset="70%"  stop-color="#ea580c"/>
+                  <stop offset="100%" stop-color="#dc2626"/>
+                </linearGradient>
+              </defs>
+              <path d="M 20 110 A 90 90 0 0 1 200 110" stroke="#E5E7EB" stroke-width="18" fill="none" stroke-linecap="round"/>
+              <path id="gaugeArc" d="M 20 110 A 90 90 0 0 1 200 110" stroke="url(#gaugeGrad)" stroke-width="18" fill="none" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283"/>
+              <text id="gaugeText" x="110" y="95" text-anchor="middle" class="gauge-number">—</text>
+              <text id="gaugeSevText" x="110" y="118" text-anchor="middle" class="gauge-sev">Awaiting data</text>
+            </svg>
+          </div>
+        </div>
+        <div class="risk-drivers-card" id="riskDriversCard">
+          <div class="rd-title">Top Risk Drivers</div>
+          <div id="riskDriversList" class="rd-list">
+            <div class="rd-placeholder">Run pipeline to see risk breakdown</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Signal Intelligence ─────────────────────────────────────────────── -->
+    <section id="sec-signals" class="content-section">
+      <div class="section-header">
+        <h2>Signal Intelligence <span class="badge-super">Super Agent</span></h2>
+        <div class="section-meta">Lead-lag normalisation — aligning 6 data streams to today</div>
+      </div>
+
+      <div class="explainer-box">
+        <strong>What this solves:</strong> POS data is 7 days stale. BTL is 21 days stale. Macro is monthly.
+        The Super Agent uses <em>fresh lead indicators</em> (daily distribution, real-time ATL) and historically-derived beta coefficients
+        to estimate what each stale signal looks like <em>today</em> — so every downstream decision is based on current reality, not last week's picture.
+      </div>
+
+      <div class="table-wrap" id="signalsTableWrap">
+        <div class="placeholder-msg">Run pipeline to see signal normalisation results</div>
+      </div>
+
+      <div class="lead-lag-section">
+        <div class="ll-title">Historical Lead-Lag Relationships Used</div>
+        <div class="ll-grid" id="leadLagGrid"></div>
+      </div>
+    </section>
+
+    <!-- ── Model Conflicts ─────────────────────────────────────────────────── -->
+    <section id="sec-conflicts" class="content-section">
+      <div class="section-header">
+        <h2>Model Conflict Centre</h2>
+        <div class="section-meta">Where MMM, Pricing Tool, and Distribution Planner disagree — and what to do about it</div>
+      </div>
+
+      <div class="explainer-box">
+        <strong>What this solves:</strong> Three tools run independently at different granularities.
+        They can — and do — contradict each other. This panel surfaces every conflict explicitly,
+        explains why it happens, and recommends which tool to trust for each decision type.
+      </div>
+
+      <!-- 3-column tool comparison -->
+      <div class="tools-comparison" id="toolsComparison">
+        <div class="tool-col tool-col-mmm">
+          <div class="tool-col-header">📊 MMM</div>
+          <div class="tool-status" id="tcMMMStatus">—</div>
+          <div class="tool-kpis" id="tcMMMKpis"></div>
+        </div>
+        <div class="tool-col tool-col-price">
+          <div class="tool-col-header">💰 Pricing Tool</div>
+          <div class="tool-status" id="tcPTStatus">—</div>
+          <div class="tool-kpis" id="tcPTKpis"></div>
+        </div>
+        <div class="tool-col tool-col-dist">
+          <div class="tool-col-header">🚛 Distribution Planner</div>
+          <div class="tool-status" id="tcDPStatus">—</div>
+          <div class="tool-kpis" id="tcDPKpis"></div>
+        </div>
+      </div>
+
+      <!-- Conflicts table -->
+      <div class="conflicts-wrap" id="conflictsWrap">
+        <div class="placeholder-msg">Run pipeline to see model conflict analysis</div>
+      </div>
+
+      <!-- Reconciled priority -->
+      <div class="reconciled-section" id="reconciledSection" style="display:none">
+        <div class="rec-title">Reconciled Priority Order</div>
+        <div id="reconciledList" class="rec-list"></div>
+      </div>
+    </section>
+
+    <!-- ── Region & Teams ──────────────────────────────────────────────────── -->
+    <section id="sec-region" class="content-section">
+      <div class="section-header">
+        <h2>Region &amp; Team Capability</h2>
+        <div class="section-meta">Data availability, model deployment, and team capacity across all 6 markets</div>
+      </div>
+
+      <div class="explainer-box">
+        <strong>What this solves:</strong> Different markets have different data feeds, model deployments, and team sizes.
+        Recommendations that work in Netherlands cannot be blindly applied in Poland.
+        This matrix shows exactly what each market has — and what it's missing.
+      </div>
+
+      <div id="regionGrid" class="region-grid">
+        <div class="placeholder-msg">Loading market capability matrix…</div>
+      </div>
+    </section>
+
+    <!-- ── Twin Markets ────────────────────────────────────────────────────── -->
+    <section id="sec-twins" class="content-section">
+      <div class="section-header">
+        <h2>Twin Market Finder</h2>
+        <div class="section-meta">Find structurally similar markets to transfer playbooks and save budget</div>
+      </div>
+
+      <div class="explainer-box">
+        <strong>What this solves:</strong> Budget is capped. You can't rebuild everything from scratch in every market.
+        This agent finds markets that are "identical twins" — same consumption patterns, channel mix, and brand position —
+        so models, calibrations, and replenishment algorithms can be transferred with minimal localisation cost.
+      </div>
+
+      <div id="twinsWrap" class="twins-wrap">
+        <div class="placeholder-msg">Run pipeline to see twin market analysis</div>
+      </div>
+    </section>
+
+    <!-- ── Recommendations ────────────────────────────────────────────────── -->
+    <section id="sec-recs" class="content-section">
+      <div class="section-header">
+        <h2>Recommendations</h2>
+        <div class="section-meta">Evidence-backed actions with arithmetic any executive can verify in 90 seconds</div>
+      </div>
+
+      <div class="explainer-box">
+        <strong>Format:</strong> Every recommendation shows the <strong>problem</strong>,
+        <strong>the maths</strong> (bullet-point arithmetic), <strong>cost of doing nothing</strong>,
+        <strong>what to do</strong>, <strong>what it costs</strong>, and <strong>ROI</strong>.
+        No black boxes. No unexplained numbers.
+      </div>
+
+      <div id="recsWrap" class="recs-wrap">
+        <div class="placeholder-msg">Run pipeline to see recommendations</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/dashboard.js"></script>
 </body>
 </html>

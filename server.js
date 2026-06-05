@@ -1,61 +1,68 @@
-const express = require('express');
-const http = require('http');
+'use strict';
+
+const express    = require('express');
+const http       = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
-const cors = require('cors');
-const AgentOrchestrator = require('./src/agents/agentOrchestrator');
+const path       = require('path');
 
-const app = express();
+const { runPipeline }      = require('./src/agents/agentOrchestrator');
+const { getRegionOverview, MARKETS } = require('./src/data/sampleData');
+
+const app    = express();
 const server = http.createServer(app);
-// Allow both WebSocket and long-polling so the app works on Vercel serverless
-const io = new Server(server, {
+const io     = new Server(server, {
   cors: { origin: '*' },
-  transports: ['polling', 'websocket'],
+  transports: ['polling', 'websocket'],   // polling first for Vercel compat
 });
 
-app.use(cors());
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-// REST: get current market state snapshot
+// ── REST endpoints ─────────────────────────────────────────────────────────
+app.get('/api/region', (req, res) => {
+  res.json({ markets: getRegionOverview() });
+});
+
 app.get('/api/markets', (req, res) => {
-  const { getSampleMarkets } = require('./src/data/sampleData');
-  res.json(getSampleMarkets());
+  res.json({ markets: Object.keys(MARKETS) });
 });
 
-// REST: get historical risk trend for a market
-app.get('/api/risk-trend/:market', (req, res) => {
-  const { getRiskTrend } = require('./src/data/sampleData');
-  res.json(getRiskTrend(req.params.market));
+app.get('/api/market/:name', (req, res) => {
+  const m = MARKETS[req.params.name];
+  if (!m) return res.status(404).json({ error: 'Market not found' });
+  res.json({ market: req.params.name, profile: m });
 });
 
-// REST: get agent pipeline config
-app.get('/api/agents', (req, res) => {
-  res.json([
-    { id: 'orchestrator', name: 'Orchestrator Agent', role: 'Coordinates all agents and assembles final decision', icon: '🧠' },
-    { id: 'ingestion',    name: 'Data Ingestion Agent', role: 'Collects & validates POS, ATL, BTL, pricing, distribution, macro data', icon: '📥' },
-    { id: 'risk',         name: 'Risk Detection Agent', role: 'Analyses patterns and computes sell-out risk score (0–100)', icon: '⚠️' },
-    { id: 'alert',        name: 'Alert Agent', role: 'Routes severity-graded alerts to Market MDs and Global Hub', icon: '🔔' },
-    { id: 'recommendation', name: 'Recommendation Agent', role: 'Proposes ranked corrective actions with ROI estimates', icon: '💡' },
-  ]);
-});
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// Socket.IO: client triggers a full agent run
-io.on('connection', (socket) => {
-  console.log(`[Socket] Client connected: ${socket.id}`);
+// ── Socket.IO real-time pipeline ──────────────────────────────────────────
+io.on('connection', socket => {
+  console.log(`[WS] Client connected: ${socket.id}`);
 
-  socket.on('run_agents', async (payload) => {
-    const market = (payload && payload.market) ? payload.market : 'Netherlands';
-    const orchestrator = new AgentOrchestrator(io, socket.id, market);
-    await orchestrator.run();
+  // Send region overview immediately on connect
+  socket.emit('region_overview', { markets: getRegionOverview() });
+
+  socket.on('run_pipeline', async ({ market }) => {
+    const selectedMarket = market || 'Netherlands';
+    console.log(`[Pipeline] Starting for ${selectedMarket}`);
+
+    const emit = (event, data) => socket.emit(event, data);
+
+    try {
+      await runPipeline(selectedMarket, emit);
+    } catch (err) {
+      console.error('[Pipeline] Error:', err);
+      socket.emit('pipeline_error', { message: err.message, market: selectedMarket });
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log(`[Socket] Client disconnected: ${socket.id}`);
+    console.log(`[WS] Client disconnected: ${socket.id}`);
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\n  🍺  Heineken Minority Report running at http://localhost:${PORT}\n`);
+  console.log(`\n🍺 Heineken AI Early Warning System`);
+  console.log(`   Running on http://localhost:${PORT}\n`);
 });

@@ -1,113 +1,97 @@
 /**
  * Risk Detection Agent
- * Computes a 0-100 sell-out risk score from all ingested data signals.
- * Higher score = higher probability of 6-10%+ volume decline in 12 weeks.
+ * Uses NORMALISED signals (not raw) so the risk score reflects today's reality,
+ * not a 7-day-old snapshot.
  */
+
+'use strict';
 
 class RiskDetectionAgent {
   constructor(market) {
     this.market = market;
-    this.logs = [];
+    this.logs   = [];
   }
 
-  _log(msg) {
-    this.logs.push({ ts: new Date().toISOString(), agent: 'RiskDetection', msg });
-  }
+  _log(msg) { this.logs.push({ ts: new Date().toISOString(), agent: 'RiskDetection', msg }); }
 
-  async detect(ingestedData) {
-    const { data, overallQuality } = ingestedData;
-    this._log(`▶ Starting risk analysis for market: ${this.market}`);
-    await this._delay(400);
+  async detect(normalisedSignals, allData) {
+    this._log(`▶ Risk Detection — using normalised signals for ${this.market}`);
+    this._log(`  Note: scores computed on normalised data, not raw — more accurate than POS-only view`);
+    await this._delay(350);
 
-    // --- 1. POS Signal ---
-    const posRecords = data.pos;
-    const avgStockCoverage = posRecords.reduce((a, r) => a + r.stockCoverageDays, 0) / posRecords.length;
-    const avgSellOut = posRecords.reduce((a, r) => a + r.sellOutRate, 0) / posRecords.length;
-    const posRisk = this._posRisk(avgStockCoverage, avgSellOut);
-    this._log(`  POS Signal     → stock_coverage=${avgStockCoverage.toFixed(1)}d, sell_out_rate=${(avgSellOut * 100).toFixed(1)}% → risk contribution: ${posRisk.toFixed(1)}`);
-    await this._delay(300);
+    const ns = normalisedSignals;
+    const dist   = ns.distribution;
+    const pos    = ns.pos;
+    const price  = ns.pricing;
+    const atl    = ns.atl;
+    const btl    = ns.btl;
+    const macro  = ns.macro;
 
-    // --- 2. Distribution Signal ---
-    const dist = data.distribution;
-    const distRisk = this._distributionRisk(dist.outOfStockRate, dist.numericDistribution, dist.deliveryOnTime);
-    this._log(`  Distribution   → OOS=${(dist.outOfStockRate * 100).toFixed(1)}%, num_dist=${(dist.numericDistribution * 100).toFixed(1)}%, OTIF=${(dist.deliveryOnTime * 100).toFixed(1)}% → risk contribution: ${distRisk.toFixed(1)}`);
-    await this._delay(250);
+    // ── Component scores ────────────────────────────────────────────────────
+    const posRisk   = this._posRisk(pos.weekly_cases_normalised, pos.sell_out_rate, allData.signals.pos.weekly_cases, allData.profile.baseline_weekly_cases);
+    const distRisk  = this._distRisk(dist.oos_rate, dist.numeric_dist, dist.otif, allData.signals.pos.retailer_detail);
+    const priceRisk = this._priceRisk(price.price_vs_competitor, price.promo_depth, price.promo_freq);
+    const brandRisk = this._brandRisk(atl.sentiment, atl.grp, btl.activations_normalised || btl.activations, atl.campaign_active);
+    const macroRisk = this._macroRisk(macro.cci, macro.cpi_normalised || macro.cpi, macro.summer_index);
 
-    // --- 3. Pricing Signal ---
-    const pricing = data.pricing;
-    const pricingRisk = this._pricingRisk(pricing.priceVsCompetitor, pricing.promoDepth, pricing.promoFrequency);
-    this._log(`  Pricing        → price_vs_competitor=${pricing.priceVsCompetitor.toFixed(2)}x, promo_depth=${(pricing.promoDepth * 100).toFixed(0)}%, elasticity=${pricing.elasticity} → risk contribution: ${pricingRisk.toFixed(1)}`);
-    await this._delay(250);
+    const W = { pos: 0.30, dist: 0.25, price: 0.22, brand: 0.13, macro: 0.10 };
+    const rawScore = posRisk * W.pos + distRisk * W.dist + priceRisk * W.price + brandRisk * W.brand + macroRisk * W.macro;
+    const final    = Math.min(100, Math.round(rawScore));
+    const severity = final >= 75 ? 'CRITICAL' : final >= 55 ? 'HIGH' : final >= 35 ? 'MEDIUM' : 'LOW';
 
-    // --- 4. ATL/BTL Signal ---
-    const atl = data.atl;
-    const btl = data.btl;
-    const brandRisk = this._brandRisk(atl.sentimentScore, atl.grp, btl.inStoreActivations, atl.campaignActive);
-    this._log(`  Brand/Comms    → sentiment=${(atl.sentimentScore * 100).toFixed(1)}%, GRP=${atl.grp}, activations=${btl.inStoreActivations} → risk contribution: ${brandRisk.toFixed(1)}`);
+    this._log(`  POS risk (normalised): ${posRisk.toFixed(1)} — normalised weekly volume vs baseline`);
+    this._log(`  Distribution risk:     ${distRisk.toFixed(1)} — OOS rate ${(dist.oos_rate * 100).toFixed(1)}%, ${allData.signals.pos.retailer_detail.filter(r => r.status !== 'OK').length} retailers at risk`);
+    this._log(`  Pricing risk:          ${priceRisk.toFixed(1)} — price index ${price.price_vs_competitor.toFixed(2)}x vs competition`);
+    this._log(`  Brand risk:            ${brandRisk.toFixed(1)} — sentiment ${(atl.sentiment * 100).toFixed(1)}%, GRP ${atl.grp}`);
+    this._log(`  Macro risk:            ${macroRisk.toFixed(1)} — CCI ${macro.cci}, seasonal index ${macro.summer_index}`);
+    this._log(`  Composite risk score:  ${final}/100 — Severity: ${severity}`);
     await this._delay(200);
 
-    // --- 5. Macro Signal ---
-    const macro = data.macro;
-    const macroRisk = this._macroRisk(macro.consumerConfidenceIndex, macro.cpi, macro.summerSeasonIndex);
-    this._log(`  Macro          → CCI=${macro.consumerConfidenceIndex}, CPI=${macro.cpi}%, season=${macro.summerSeasonIndex} → risk contribution: ${macroRisk.toFixed(1)}`);
-    await this._delay(200);
+    const topDrivers = [
+      { name: 'pos',   score: posRisk,   weighted: posRisk * W.pos },
+      { name: 'dist',  score: distRisk,  weighted: distRisk * W.dist },
+      { name: 'price', score: priceRisk, weighted: priceRisk * W.price },
+      { name: 'brand', score: brandRisk, weighted: brandRisk * W.brand },
+      { name: 'macro', score: macroRisk, weighted: macroRisk * W.macro },
+    ].sort((a, b) => b.weighted - a.weighted).slice(0, 3);
 
-    // --- Weighted composite risk score ---
-    const weights = { pos: 0.30, dist: 0.25, pricing: 0.22, brand: 0.13, macro: 0.10 };
-    let rawScore = (
-      posRisk      * weights.pos +
-      distRisk     * weights.dist +
-      pricingRisk  * weights.pricing +
-      brandRisk    * weights.brand +
-      macroRisk    * weights.macro
-    );
-
-    // Data quality penalty: low-quality data adds uncertainty → inflate risk slightly
-    const qualityPenalty = (1 - overallQuality) * 8;
-    const finalScore = Math.min(100, Math.round(rawScore + qualityPenalty));
-
-    this._log(`  Composite raw score: ${rawScore.toFixed(1)} + quality_uncertainty_penalty: +${qualityPenalty.toFixed(1)}`);
-    await this._delay(200);
-
-    const severity = this._severity(finalScore);
-    const drivers = this._topDrivers({ posRisk, distRisk, pricingRisk, brandRisk, macroRisk }, weights);
-
-    this._log(`✅ Risk Score: ${finalScore} / 100 — Severity: ${severity}`);
-    this._log(`  Top risk drivers: ${drivers.map(d => `${d.name} (${d.contribution.toFixed(1)})`).join(', ')}`);
+    this._log(`✅ Top 3 drivers: ${topDrivers.map(d => `${d.name} (${d.weighted.toFixed(1)})`).join(', ')}`);
 
     return {
-      riskScore: finalScore,
-      severity,
-      components: { posRisk, distRisk, pricingRisk, brandRisk, macroRisk },
-      topDrivers: drivers,
-      logs: this.logs,
+      riskScore: final, severity,
+      components: { posRisk, distRisk, priceRisk, brandRisk, macroRisk },
+      topDrivers, logs: this.logs,
     };
   }
 
-  _posRisk(stockDays, sellOutRate) {
-    let r = 50;
-    if (stockDays < 10) r += 30;
-    else if (stockDays < 15) r += 15;
-    else if (stockDays > 28) r += 5;
-    if (sellOutRate < 0.75) r += 25;
-    else if (sellOutRate < 0.85) r += 10;
+  _posRisk(normWeekly, sellOutRate, rawWeekly, baseline) {
+    let r = 40;
+    const vs_baseline = (normWeekly - baseline) / baseline;
+    if (vs_baseline < -0.12) r += 35;
+    else if (vs_baseline < -0.06) r += 20;
+    else if (vs_baseline < -0.02) r += 10;
+    if (sellOutRate < 0.78) r += 20;
+    else if (sellOutRate < 0.85) r += 8;
     return Math.min(100, r);
   }
 
-  _distributionRisk(oos, numDist, otif) {
-    let r = 50;
-    r += oos * 120;
+  _distRisk(oos, numDist, otif, retailers) {
+    let r = 40;
+    r += oos * 150;
     if (numDist < 0.65) r += 20;
     else if (numDist < 0.75) r += 10;
-    if (otif < 0.80) r += 15;
-    else if (otif < 0.88) r += 5;
+    if (otif < 0.82) r += 15;
+    if (retailers) {
+      const atRisk = retailers.filter(r => r.status === 'AT RISK').length;
+      r += atRisk * 8;
+    }
     return Math.min(100, r);
   }
 
-  _pricingRisk(priceVsComp, promoDepth, promoFreq) {
-    let r = 40;
-    if (priceVsComp > 1.10) r += 25;
-    else if (priceVsComp > 1.05) r += 12;
+  _priceRisk(priceVsComp, promoDepth, promoFreq) {
+    let r = 38;
+    if (priceVsComp > 1.10) r += 28;
+    else if (priceVsComp > 1.05) r += 14;
     if (promoDepth < 0.12) r += 10;
     if (promoFreq < 0.20) r += 8;
     return Math.min(100, r);
@@ -115,9 +99,10 @@ class RiskDetectionAgent {
 
   _brandRisk(sentiment, grp, activations, campaignActive) {
     let r = 35;
-    if (sentiment < 0.55) r += 25;
-    else if (sentiment < 0.65) r += 12;
+    if (sentiment < 0.55) r += 28;
+    else if (sentiment < 0.65) r += 14;
     if (grp < 250) r += 15;
+    else if (grp < 280) r += 7;
     if (!campaignActive) r += 10;
     if (activations < 25) r += 8;
     return Math.min(100, r);
@@ -126,29 +111,12 @@ class RiskDetectionAgent {
   _macroRisk(cci, cpi, seasonIdx) {
     let r = 30;
     if (cci < 90) r += 20;
-    else if (cci < 95) r += 10;
-    if (cpi > 4.5) r += 15;
-    if (seasonIdx > 1.05) r -= 10;  // seasonality reduces risk
+    if (cpi > 5) r += 15;
+    if (seasonIdx > 1.05) r -= 12;
     return Math.max(0, Math.min(100, r));
   }
 
-  _severity(score) {
-    if (score >= 75) return 'CRITICAL';
-    if (score >= 55) return 'HIGH';
-    if (score >= 35) return 'MEDIUM';
-    return 'LOW';
-  }
-
-  _topDrivers(components, weights) {
-    return Object.entries(components)
-      .map(([key, val]) => ({ name: key.replace('Risk', ''), contribution: val * (weights[key.replace('Risk', '')] || 0.1) }))
-      .sort((a, b) => b.contribution - a.contribution)
-      .slice(0, 3);
-  }
-
-  _delay(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
+  _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 }
 
 module.exports = RiskDetectionAgent;

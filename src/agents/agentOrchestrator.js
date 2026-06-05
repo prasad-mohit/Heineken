@@ -1,107 +1,72 @@
+'use strict';
+
+const SignalNormalizationAgent = require('./signalNormalizationAgent');
+const ModelConflictAgent       = require('./modelConflictAgent');
+const TwinMarketAgent          = require('./twinMarketAgent');
+const RiskDetectionAgent       = require('./riskDetectionAgent');
+const RecommendationAgent      = require('./recommendationAgent');
+const AlertAgent               = require('./alertAgent');
+const { generateAllData }      = require('../data/sampleData');
+
 /**
- * Agent Orchestrator
- * Coordinates the full Minority Report agent pipeline and streams events via Socket.IO.
+ * Pipeline:
+ * 1. Signal Normalization  — align all signals to today (lead-lag bridge)
+ * 2. Model Conflicts       — MMM vs Pricing Tool vs Distribution Planner
+ * 3. Twin Markets          — find structurally similar markets for leverage
+ * 4. Risk Detection        — score using normalised signals
+ * 5. Recommendations       — evidence-backed actions with simple maths
+ * 6. Alert Routing         — stakeholder notifications
  */
+async function runPipeline(market, emit) {
+  const allData = generateAllData(market);
 
-const DataIngestionAgent  = require('./dataIngestionAgent');
-const RiskDetectionAgent  = require('./riskDetectionAgent');
-const AlertAgent          = require('./alertAgent');
-const RecommendationAgent = require('./recommendationAgent');
+  // ── Phase 1: Signal Normalization ──────────────────────────────────────────
+  emit('phase', { phase: 'signal_normalization', label: 'Signal Normalization', status: 'running', market });
+  const normAgent  = new SignalNormalizationAgent(market);
+  const normResult = await normAgent.normalize(allData);
+  emit('normalization_complete', { ...normResult, market });
+  emit('logs', { agent: 'SignalNormalization', logs: normResult.logs });
 
-class AgentOrchestrator {
-  constructor(io, socketId, market) {
-    this.io       = io;
-    this.socketId = socketId;
-    this.market   = market;
-  }
+  // ── Phase 2: Model Conflicts ───────────────────────────────────────────────
+  emit('phase', { phase: 'model_conflicts', label: 'Model Conflict Analysis', status: 'running', market });
+  const conflictAgent  = new ModelConflictAgent(market);
+  const conflictResult = await conflictAgent.analyse(allData);
+  emit('conflicts_complete', { ...conflictResult, market });
+  emit('logs', { agent: 'ModelConflict', logs: conflictResult.logs });
 
-  _emit(event, payload) {
-    this.io.to(this.socketId).emit(event, payload);
-  }
+  // ── Phase 3: Twin Markets ──────────────────────────────────────────────────
+  emit('phase', { phase: 'twin_markets', label: 'Twin Market Analysis', status: 'running', market });
+  const twinAgent  = new TwinMarketAgent(market);
+  const twinResult = await twinAgent.findTwins();
+  emit('twin_complete', { ...twinResult, market });
+  emit('logs', { agent: 'TwinMarket', logs: twinResult.logs });
 
-  async run() {
-    const startTime = Date.now();
-    this._emit('agent_start', { market: this.market, ts: new Date().toISOString() });
-    this._emit('orchestrator_log', { msg: `🧠 Orchestrator activated for market: ${this.market}` });
-    this._emit('orchestrator_log', { msg: `   Spawning agent pipeline: DataIngestion → RiskDetection → Alert → Recommendation` });
-    await this._delay(400);
+  // ── Phase 4: Risk Detection ────────────────────────────────────────────────
+  emit('phase', { phase: 'risk_detection', label: 'Risk Detection', status: 'running', market });
+  const riskAgent  = new RiskDetectionAgent(market);
+  const riskResult = await riskAgent.detect(normResult.normalised_signals, allData);
+  emit('risk_complete', { ...riskResult, market });
+  emit('logs', { agent: 'RiskDetection', logs: riskResult.logs });
 
-    // ── PHASE 1: Data Ingestion ──────────────────────────────────────────────
-    this._emit('phase_change', { phase: 'ingestion', label: 'Data Ingestion', status: 'active' });
-    const ingestionAgent = new DataIngestionAgent(this.market);
-    const ingestionResult = await ingestionAgent.ingest();
+  // ── Phase 5: Recommendations ───────────────────────────────────────────────
+  emit('phase', { phase: 'recommendations', label: 'Generating Recommendations', status: 'running', market });
+  const recAgent  = new RecommendationAgent(market);
+  const recResult = await recAgent.generate(riskResult, normResult.normalised_signals, allData, conflictResult, twinResult);
+  emit('recommendations_complete', { ...recResult, market });
+  emit('logs', { agent: 'Recommendation', logs: recResult.logs });
 
-    for (const log of ingestionResult.logs) {
-      this._emit('agent_log', { ...log });
-      await this._delay(80);
-    }
-    this._emit('ingestion_complete', {
-      sourceReport: ingestionResult.sourceReport,
-      overallQuality: ingestionResult.overallQuality,
-    });
-    this._emit('phase_change', { phase: 'ingestion', label: 'Data Ingestion', status: 'done' });
-    await this._delay(300);
+  // ── Phase 6: Alert Routing ─────────────────────────────────────────────────
+  emit('phase', { phase: 'alerts', label: 'Alert Routing', status: 'running', market });
+  const alertAgent  = new AlertAgent(market);
+  const alertResult = await alertAgent.route(riskResult, recResult.recommendations);
+  emit('alerts_complete', { ...alertResult, market });
+  emit('logs', { agent: 'Alert', logs: alertResult.logs });
 
-    // ── PHASE 2: Risk Detection ──────────────────────────────────────────────
-    this._emit('phase_change', { phase: 'risk', label: 'Risk Detection', status: 'active' });
-    const riskAgent = new RiskDetectionAgent(this.market);
-    const riskResult = await riskAgent.detect(ingestionResult);
+  emit('phase', { phase: 'complete', label: 'Pipeline Complete', status: 'done', market });
 
-    for (const log of riskResult.logs) {
-      this._emit('agent_log', { ...log });
-      await this._delay(80);
-    }
-    this._emit('risk_complete', {
-      riskScore: riskResult.riskScore,
-      severity: riskResult.severity,
-      components: riskResult.components,
-      topDrivers: riskResult.topDrivers,
-    });
-    this._emit('phase_change', { phase: 'risk', label: 'Risk Detection', status: 'done' });
-    await this._delay(300);
-
-    // ── PHASE 3: Alerting ────────────────────────────────────────────────────
-    this._emit('phase_change', { phase: 'alert', label: 'Alert Routing', status: 'active' });
-    const alertAgent = new AlertAgent(this.market);
-    const alertResult = await alertAgent.generateAlerts(riskResult, ingestionResult);
-
-    for (const log of alertResult.logs) {
-      this._emit('agent_log', { ...log });
-      await this._delay(80);
-    }
-    this._emit('alerts_complete', { alerts: alertResult.alerts });
-    this._emit('phase_change', { phase: 'alert', label: 'Alert Routing', status: 'done' });
-    await this._delay(300);
-
-    // ── PHASE 4: Recommendations ─────────────────────────────────────────────
-    this._emit('phase_change', { phase: 'recommendation', label: 'Recommendations', status: 'active' });
-    const recAgent = new RecommendationAgent(this.market);
-    const recResult = await recAgent.recommend(riskResult, ingestionResult);
-
-    for (const log of recResult.logs) {
-      this._emit('agent_log', { ...log });
-      await this._delay(80);
-    }
-    this._emit('recommendations_complete', { recommendations: recResult.recommendations });
-    this._emit('phase_change', { phase: 'recommendation', label: 'Recommendations', status: 'done' });
-    await this._delay(200);
-
-    // ── DONE ─────────────────────────────────────────────────────────────────
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    this._emit('orchestrator_log', { msg: `✅ Pipeline complete in ${elapsed}s. Risk: ${riskResult.riskScore}/100 (${riskResult.severity}). Actions: ${recResult.recommendations.length}` });
-    this._emit('agent_done', {
-      market: this.market,
-      riskScore: riskResult.riskScore,
-      severity: riskResult.severity,
-      alertCount: alertResult.alerts.length,
-      recommendationCount: recResult.recommendations.length,
-      elapsedSeconds: elapsed,
-    });
-  }
-
-  _delay(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
+  return {
+    market, allData, normResult, conflictResult, twinResult, riskResult, recResult, alertResult,
+  };
 }
 
-module.exports = AgentOrchestrator;
+module.exports = { runPipeline };

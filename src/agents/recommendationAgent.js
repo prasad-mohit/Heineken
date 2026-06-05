@@ -1,345 +1,176 @@
 /**
  * Recommendation Agent
- * Evidence-first: each recommendation is triggered only when specific signal thresholds
- * are breached, and carries a structured evidence chain so stakeholders can see exactly
- * what was observed, what threshold was crossed, and why the action follows logically.
+ *
+ * Format philosophy: a Country MD should be able to understand every recommendation
+ * in under 90 seconds and challenge any number with a calculator.
+ *
+ * Each recommendation has:
+ *   PROBLEM     — one sentence, what's going wrong
+ *   THE MATHS   — bullet-point arithmetic any exec can verify
+ *   DO NOTHING  — cost of inaction (makes decision easy)
+ *   ACTION      — exactly what to do and who does it
+ *   COST        — specific euro amount
+ *   ROI         — result ÷ cost
  */
 
-// Thresholds used across the agent — single source of truth
-const T = {
-  stockCoverageDaysMin:   21,   // days; below this = warning/breach
-  stockCoverageDangerous: 14,   // days; below this = breach
-  oosRateMax:             0.08, // 8%; above = warning; above 12% = breach
-  otifMin:                0.88,
-  sellOutRateMin:         0.82,
-  priceVsCompMax:         1.05, // Heineken premium cap vs competitor
-  promoDepthMin:          0.15,
-  promoFreqMin:           0.22,
-  numericDistMin:         0.80,
-  weightedDistMin:        0.85,
-  skuAvailMin:            0.85,
-  sentimentMin:           0.68,
-  grpMin:                 280,
-  activationsMin:         40,
-  cciMin:                 92,
-};
+'use strict';
 
 class RecommendationAgent {
   constructor(market) {
     this.market = market;
-    this.logs = [];
+    this.logs   = [];
   }
 
-  _log(msg) {
-    this.logs.push({ ts: new Date().toISOString(), agent: 'Recommendation', msg });
-  }
+  _log(msg) { this.logs.push({ ts: new Date().toISOString(), agent: 'Recommendation', msg }); }
 
-  async recommend(riskResult, ingestedData) {
-    const { riskScore, severity, components } = riskResult;
-    const { data, sourceReport } = ingestedData;
-
-    this._log(`▶ Evaluating evidence for recommendations — market: ${this.market}`);
-    this._log(`  Risk profile: score=${riskScore}, severity=${severity}`);
-    this._log(`  Checking 5 recommendation hypotheses against observed signal data…`);
+  async generate(riskData, normData, allData, conflictData, twinData) {
+    this._log(`▶ Recommendation Agent — generating evidence-backed actions for ${this.market}`);
+    this._log(`  Input: Risk ${riskData.riskScore}/100 · ${riskData.topDrivers.length} top drivers`);
+    this._log(`  Format: problem / the maths / do-nothing cost / action / cost / ROI`);
     await this._delay(350);
 
-    const candidates = [];
+    const recs = [];
+    const dist   = allData.signals.distribution;
+    const pos    = normData.pos;
+    const price  = allData.pricing_tool;
 
-    // ── REC-001: Replenishment acceleration ────────────────────────────────
-    {
-      const posRecords  = data.pos;
-      const avgCoverage = posRecords.reduce((a, r) => a + r.stockCoverageDays, 0) / posRecords.length;
-      const avgSellOut  = posRecords.reduce((a, r) => a + r.sellOutRate, 0) / posRecords.length;
-      const oosRate     = data.distribution.outOfStockRate;
-      const otif        = data.distribution.deliveryOnTime;
-      const lowStockRetailers = posRecords.filter(r => r.stockCoverageDays < T.stockCoverageDangerous);
+    // ── REC-001: OOS / Restock ─────────────────────────────────────────────
+    if (dist.oos_rate > 0.06) {
+      const worst  = allData.signals.pos.retailer_detail.find(r => r.status === 'AT RISK');
+      const cases_per_day = pos.cases_per_day_normalised;
+      const stock_days    = worst ? worst.stock_days : dist.avg_stock_days;
+      const days_to_act   = Math.max(0, Math.round(stock_days - dist.delivery_lead_days));
+      const at_risk_days  = Math.max(1, Math.round(dist.delivery_lead_days * 0.5));
+      const lost_cases    = at_risk_days * cases_per_day;
+      const lost_revenue  = Math.round(lost_cases * allData.profile.revenue_per_case);
+      const action_cost   = dist.extra_delivery_cost;
+      const roi_one_time  = parseFloat((lost_revenue / action_cost).toFixed(1));
+      const roi_quarterly = parseFloat((roi_one_time * (13 / (at_risk_days / 7))).toFixed(1));
 
-      const evidence = [
-        this._ev('Avg stock coverage', `${avgCoverage.toFixed(1)} days`, `≥${T.stockCoverageDaysMin} days`,
-          avgCoverage < T.stockCoverageDangerous ? 'BREACH' : avgCoverage < T.stockCoverageDaysMin ? 'WARNING' : 'OK',
-          'POS', 'HIGH'),
-        this._ev('Retailers below 14-day threshold', `${lowStockRetailers.length} of ${posRecords.length}`, '0 retailers', lowStockRetailers.length > 0 ? 'BREACH' : 'OK', 'POS', 'HIGH'),
-        this._ev('Out-of-stock rate', `${(oosRate * 100).toFixed(1)}%`, `≤${(T.oosRateMax * 100).toFixed(0)}%`,
-          oosRate > 0.12 ? 'BREACH' : oosRate > T.oosRateMax ? 'WARNING' : 'OK', 'Distribution', 'HIGH'),
-        this._ev('Sell-out rate (avg)', `${(avgSellOut * 100).toFixed(1)}%`, `≥${(T.sellOutRateMin * 100).toFixed(0)}%`,
-          avgSellOut < T.sellOutRateMin ? 'WARNING' : 'OK', 'POS', 'HIGH'),
-        this._ev('OTIF delivery rate', `${(otif * 100).toFixed(1)}%`, `≥${(T.otifMin * 100).toFixed(0)}%`,
-          otif < T.otifMin ? 'WARNING' : 'OK', 'Distribution', 'HIGH'),
-      ];
+      const rec = {
+        id: 'REC-001', priority: 1, confidence: riskData.components.distRisk > 60 ? 'HIGH' : 'MEDIUM',
+        category: 'Supply Chain',
+        headline: `Stock-out at ${worst?.retailer || 'key retailers'} in ~${Math.round(stock_days)} days — act within ${Math.max(1, days_to_act)} day(s)`,
+        problem: `${worst?.retailer || 'Top retailers'} will run out of Heineken in ${Math.round(stock_days)} days. Your replenishment lead time is ${dist.delivery_lead_days} days. This is a ${days_to_act}-day decision window.`,
+        the_maths: [
+          { label: 'Normalised sell-out rate', value: `${cases_per_day.toLocaleString()} cases/day`, source: 'Signal Normalization Agent (POS + Distribution)' },
+          { label: `Stock at ${worst?.retailer || 'affected retailers'}`, value: `${worst ? Math.round(worst.stock_days * cases_per_day).toLocaleString() : 'see report'} cases`, source: 'Distribution Planner (today)' },
+          { label: 'Days of stock left', value: `stock ÷ ${cases_per_day} = ${Math.round(stock_days)} days`, source: 'Calculated' },
+          { label: 'Delivery lead time', value: `${dist.delivery_lead_days} days`, source: 'Logistics SLA' },
+          { label: 'Decision window', value: `${Math.round(stock_days)} − ${dist.delivery_lead_days} = ${days_to_act} day(s)`, source: 'Derived' },
+        ],
+        do_nothing: {
+          days_at_risk: at_risk_days,
+          cases_at_risk: lost_cases,
+          formula: `${at_risk_days} day(s) × ${cases_per_day.toLocaleString()} cases/day × €${allData.profile.revenue_per_case} = €${lost_revenue.toLocaleString()}`,
+          value: lost_revenue, currency: 'EUR',
+        },
+        action: `Schedule extra delivery to ${worst?.retailer || 'priority retailers'} within ${days_to_act} day(s). Change from weekly to twice-weekly replenishment for 4 weeks.`,
+        owner: 'Supply Chain Director',
+        deadline: `Within ${days_to_act} day(s)`,
+        cost: { value: action_cost, currency: 'EUR', description: `Extra delivery run + route planning` },
+        roi: {
+          one_time: roi_one_time,
+          quarterly: roi_quarterly,
+          formula: `€${lost_revenue.toLocaleString()} saved ÷ €${action_cost.toLocaleString()} cost = ${roi_one_time}x immediate · ${roi_quarterly}x over 13 weeks`,
+        },
+        evidence_from: ['Distribution Planner', 'Signal Normalization Agent'],
+      };
 
-      const breaches = evidence.filter(e => e.status === 'BREACH').length;
-      const warnings = evidence.filter(e => e.status === 'WARNING').length;
-
-      this._log(`  Hypothesis REC-001 (Replenishment):`);
-      evidence.forEach(e => this._log(`    → ${e.signal}: observed ${e.observed} | threshold ${e.threshold} | ${e.status}`));
-      this._log(`    Result: ${breaches} breach(es), ${warnings} warning(s) — ${breaches + warnings > 0 ? 'TRIGGERED' : 'NOT triggered'}`);
-      await this._delay(300);
-
-      if (breaches > 0 || warnings >= 2) {
-        const confidence = this._confidence(evidence, sourceReport);
-        const volRecovery = Math.round(2.5 * breaches + 1.2 * warnings);
-        const roi = this._roi(riskScore, 120);
-        candidates.push({
-          id: 'REC-001',
-          priority: 1,
-          category: 'Supply Chain',
-          action: `Increase replenishment frequency to bi-weekly at ${lowStockRetailers.length > 0 ? lowStockRetailers.map(r => r.retailer).join(', ') : 'top retailers'}`,
-          reasoning: `${breaches} of ${evidence.length} supply signals are in breach. Stock coverage at ${avgCoverage.toFixed(1)} days is ${(T.stockCoverageDaysMin - avgCoverage).toFixed(1)} days below the safe threshold of ${T.stockCoverageDaysMin} days, creating an OOS event risk within ${Math.round(avgCoverage / 2)} weeks if sell-out continues at current rate.`,
-          evidence,
-          confidence,
-          breachCount: breaches,
-          warningCount: warnings,
-          estimatedVolumeRecovery: `+${volRecovery}%`,
-          estimatedROI: `€${roi}K / quarter`,
-          effort: 'LOW',
-          timeToImpact: '1–2 weeks',
-          owner: 'Supply Chain Director',
-          kpi: `Stock Coverage Days ≥ ${T.stockCoverageDaysMin} · OOS Rate ≤ ${(T.oosRateMax * 100).toFixed(0)}%`,
-        });
-      }
+      recs.push(rec);
+      this._log(`  REC-001 (OOS): ${worst?.retailer || 'retailers'} run-out in ${Math.round(stock_days)} days · do-nothing cost €${lost_revenue.toLocaleString()} · ROI ${roi_one_time}x`);
     }
     await this._delay(200);
 
-    // ── REC-002: Pricing & Promotional activation ──────────────────────────
-    {
-      const pricing      = data.pricing;
-      const priceVsComp  = pricing.priceVsCompetitor;
-      const promoDepth   = pricing.promoDepth;
-      const promoFreq    = pricing.promoFrequency;
-      const elasticity   = pricing.elasticity;
-      const impliedLift  = Math.abs(elasticity * (priceVsComp - 1) * 100).toFixed(1);
+    // ── REC-002: Pricing ───────────────────────────────────────────────────
+    if (price && price.current_shelf_price > price.optimal_shelf_price * 1.02) {
+      const current = price.current_shelf_price;
+      const optimal = price.optimal_shelf_price;
+      const gap_pct = parseFloat(((current - optimal) / optimal * 100).toFixed(1));
+      const elasticity = price.elasticity_used;
+      const vol_drag_pct = Math.abs(gap_pct * elasticity / 100);
+      const normalised_weekly = normData.pos.weekly_cases_normalised;
+      const volume_recoverable = Math.round(normalised_weekly * vol_drag_pct);
+      const revenue_uplift = Math.round(volume_recoverable * allData.profile.revenue_per_case * 52); // annual
+      const promo_cost = Math.round(volume_recoverable * 0.18 * 52); // ~€0.18/case promo cost
+      const roi_annual = parseFloat((revenue_uplift / promo_cost).toFixed(1));
 
-      const evidence = [
-        this._ev('Price vs competitor index', `${priceVsComp.toFixed(2)}x`, `≤${T.priceVsCompMax.toFixed(2)}x`,
-          priceVsComp > 1.10 ? 'BREACH' : priceVsComp > T.priceVsCompMax ? 'WARNING' : 'OK', 'Pricing & Promo', 'HIGH'),
-        this._ev('Current promo depth', `${(promoDepth * 100).toFixed(0)}%`, `≥${(T.promoDepthMin * 100).toFixed(0)}%`,
-          promoDepth < T.promoDepthMin ? 'WARNING' : 'OK', 'Pricing & Promo', 'HIGH'),
-        this._ev('Promo frequency', `${(promoFreq * 100).toFixed(0)}% of weeks`, `≥${(T.promoFreqMin * 100).toFixed(0)}%`,
-          promoFreq < T.promoFreqMin ? 'WARNING' : 'OK', 'Pricing & Promo', 'HIGH'),
-        this._ev('Price elasticity', `${elasticity}`, 'context only', 'OK', 'Pricing & Promo', 'HIGH'),
-        this._ev('Implied volume drag from price premium', `−${impliedLift}%`, '≤0%',
-          parseFloat(impliedLift) > 3 ? 'BREACH' : parseFloat(impliedLift) > 1 ? 'WARNING' : 'OK', 'Derived', 'HIGH'),
-      ];
-
-      const breaches = evidence.filter(e => e.status === 'BREACH').length;
-      const warnings = evidence.filter(e => e.status === 'WARNING').length;
-
-      this._log(`  Hypothesis REC-002 (Pricing/Promo):`);
-      evidence.forEach(e => this._log(`    → ${e.signal}: observed ${e.observed} | threshold ${e.threshold} | ${e.status}`));
-      this._log(`    Result: ${breaches} breach(es), ${warnings} warning(s) — ${breaches + warnings > 0 ? 'TRIGGERED' : 'NOT triggered'}`);
-      await this._delay(300);
-
-      if (breaches > 0 || warnings >= 2) {
-        const confidence = this._confidence(evidence, sourceReport);
-        const promoLiftPct = Math.abs(Math.round(elasticity * 0.15 * 100));
-        const roi = this._roi(riskScore, 95);
-        const premiumPct = ((priceVsComp - 1) * 100).toFixed(0);
-        candidates.push({
-          id: 'REC-002',
-          priority: 2,
-          category: 'Pricing & Promotions',
-          action: `Activate 4-pack at −15% shelf price at Albert Heijn & Jumbo to counter ${premiumPct}% price premium`,
-          reasoning: `Heineken is currently priced ${premiumPct}% above the competitive benchmark. At the observed price elasticity of ${elasticity}, this premium is estimated to be suppressing volume by ${impliedLift}%. A targeted −15% promo pack reduces the effective price gap while protecting brand equity — projected to lift volume by +${promoLiftPct}% at activated outlets.`,
-          evidence,
-          confidence,
-          breachCount: breaches,
-          warningCount: warnings,
-          estimatedVolumeRecovery: `+${promoLiftPct}%`,
-          estimatedROI: `€${roi}K / quarter`,
-          effort: 'MEDIUM',
-          timeToImpact: '2–3 weeks',
-          owner: 'Commercial Director + Revenue Management Hub',
-          kpi: `Effective price index ≤ 1.03x · Promo lift ≥ 1.15x`,
-        });
-      }
-    }
-    await this._delay(200);
-
-    // ── REC-003: Distribution gap ──────────────────────────────────────────
-    {
-      const dist = data.distribution;
-      const numDist  = dist.numericDistribution;
-      const wgtDist  = dist.weightedDistribution;
-      const skuAvail = dist.skuAvailability;
-      const gap      = ((T.numericDistMin - numDist) * 100).toFixed(1);
-
-      const evidence = [
-        this._ev('Numeric distribution', `${(numDist * 100).toFixed(1)}%`, `≥${(T.numericDistMin * 100).toFixed(0)}%`,
-          numDist < 0.70 ? 'BREACH' : numDist < T.numericDistMin ? 'WARNING' : 'OK', 'Distribution', 'HIGH'),
-        this._ev('Weighted distribution', `${(wgtDist * 100).toFixed(1)}%`, `≥${(T.weightedDistMin * 100).toFixed(0)}%`,
-          wgtDist < T.weightedDistMin ? 'WARNING' : 'OK', 'Distribution', 'HIGH'),
-        this._ev('SKU availability on shelf', `${(skuAvail * 100).toFixed(1)}%`, `≥${(T.skuAvailMin * 100).toFixed(0)}%`,
-          skuAvail < T.skuAvailMin ? 'WARNING' : 'OK', 'Distribution', 'HIGH'),
-        this._ev('Out-of-stock rate', `${(dist.outOfStockRate * 100).toFixed(1)}%`, `≤${(T.oosRateMax * 100).toFixed(0)}%`,
-          dist.outOfStockRate > T.oosRateMax ? 'BREACH' : 'OK', 'Distribution', 'HIGH'),
-      ];
-
-      const breaches = evidence.filter(e => e.status === 'BREACH').length;
-      const warnings = evidence.filter(e => e.status === 'WARNING').length;
-
-      this._log(`  Hypothesis REC-003 (Distribution gap):`);
-      evidence.forEach(e => this._log(`    → ${e.signal}: observed ${e.observed} | threshold ${e.threshold} | ${e.status}`));
-      this._log(`    Result: ${breaches} breach(es), ${warnings} warning(s) — ${breaches + warnings > 0 ? 'TRIGGERED' : 'NOT triggered'}`);
-      await this._delay(300);
-
-      if (breaches > 0 || warnings >= 2) {
-        const confidence = this._confidence(evidence, sourceReport);
-        const volRec = Math.round(parseFloat(gap) * 0.6);
-        const roi = this._roi(riskScore, 60);
-        candidates.push({
-          id: 'REC-003',
-          priority: 3,
-          category: 'Distribution',
-          action: `Close ${gap}pt numeric distribution gap — target 5 new independent MT listings in urban clusters`,
-          reasoning: `Numeric distribution stands at ${(numDist * 100).toFixed(1)}%, ${gap} percentage points below the 80% target. Each 1pp increase in numeric distribution historically recovers ~0.6% volume. Prioritising independent MT stores in urban clusters maximises weighted distribution impact with lowest route-to-market cost.`,
-          evidence,
-          confidence,
-          breachCount: breaches,
-          warningCount: warnings,
-          estimatedVolumeRecovery: `+${volRec}%`,
-          estimatedROI: `€${roi}K / quarter`,
-          effort: 'MEDIUM',
-          timeToImpact: '3–4 weeks',
-          owner: 'Field Sales Manager',
-          kpi: `Numeric Distribution ≥ 80% · OOS Rate ≤ 8%`,
-        });
-      }
-    }
-    await this._delay(200);
-
-    // ── REC-004: Brand & BTL activation ───────────────────────────────────
-    {
-      const atl  = data.atl;
-      const btl  = data.btl;
-      const mac  = data.macro;
-      const seasonFavorable = mac.summerSeasonIndex > 1.05;
-
-      const evidence = [
-        this._ev('Brand sentiment score', `${(atl.sentimentScore * 100).toFixed(1)}%`, `≥${(T.sentimentMin * 100).toFixed(0)}%`,
-          atl.sentimentScore < 0.58 ? 'BREACH' : atl.sentimentScore < T.sentimentMin ? 'WARNING' : 'OK', 'ATL', 'HIGH'),
-        this._ev('Campaign GRP delivery', `${atl.grp}`, `≥${T.grpMin}`,
-          atl.grp < T.grpMin * 0.8 ? 'BREACH' : atl.grp < T.grpMin ? 'WARNING' : 'OK', 'ATL', 'HIGH'),
-        this._ev('Active campaign', atl.campaignActive ? 'Yes' : 'No', 'Active',
-          !atl.campaignActive ? 'BREACH' : 'OK', 'ATL', 'HIGH'),
-        this._ev('In-store activations', `${btl.inStoreActivations}`, `≥${T.activationsMin}`,
-          btl.inStoreActivations < T.activationsMin * 0.7 ? 'BREACH' : btl.inStoreActivations < T.activationsMin ? 'WARNING' : 'OK', 'BTL', 'MEDIUM'),
-        this._ev('Summer season index', `${mac.summerSeasonIndex.toFixed(2)}`, '> 1.05 = favourable',
-          seasonFavorable ? 'OK' : 'WARNING', 'Macro', 'LOW'),
-      ];
-
-      const breaches = evidence.filter(e => e.status === 'BREACH').length;
-      const warnings = evidence.filter(e => e.status === 'WARNING').length;
-
-      this._log(`  Hypothesis REC-004 (Brand/BTL):`);
-      evidence.forEach(e => this._log(`    → ${e.signal}: observed ${e.observed} | threshold ${e.threshold} | ${e.status}`));
-      this._log(`    Result: ${breaches} breach(es), ${warnings} warning(s) — ${breaches + warnings > 0 ? 'TRIGGERED' : 'NOT triggered'}`);
-      await this._delay(300);
-
-      if (breaches > 0 || warnings >= 2) {
-        const confidence = this._confidence(evidence, sourceReport);
-        const volRec = Math.round(1.5 * breaches + 0.8 * warnings);
-        const roi = this._roi(riskScore, 50);
-        const seasonNote = seasonFavorable
-          ? `Summer season index of ${mac.summerSeasonIndex.toFixed(2)} confirms consumer demand is present — the gap is in visibility, not category.`
-          : `Seasonal tailwind is limited; activation ROI will be lower than peak summer.`;
-        candidates.push({
-          id: 'REC-004',
-          priority: 4,
-          category: 'Brand & Activation',
-          action: `Deploy +${Math.max(0, T.activationsMin - btl.inStoreActivations)} in-store activations and restore GRP to ≥${T.grpMin} via "Ice Cold Heineken" summer burst`,
-          reasoning: `Brand sentiment at ${(atl.sentimentScore * 100).toFixed(1)}% is below the ${(T.sentimentMin * 100).toFixed(0)}% threshold and in-store activation count (${btl.inStoreActivations}) is ${T.activationsMin - btl.inStoreActivations} below minimum. ${seasonNote} BTL data freshness is MEDIUM quality (sporadic 21-day lag) — ROI estimate carries a ±15% uncertainty band.`,
-          evidence,
-          confidence,
-          breachCount: breaches,
-          warningCount: warnings,
-          estimatedVolumeRecovery: `+${volRec}%`,
-          estimatedROI: `€${roi}K / quarter`,
-          effort: 'HIGH',
-          timeToImpact: '4–6 weeks',
-          owner: 'Category Director + Field Marketing',
-          kpi: `Brand Sentiment ≥ ${(T.sentimentMin * 100).toFixed(0)}% · In-store activations ≥ ${T.activationsMin}`,
-        });
-      }
-    }
-    await this._delay(200);
-
-    // ── REC-005: Strategic pilot decision ─────────────────────────────────
-    {
-      const topDriverSummary = riskResult.topDrivers.map(d => `${d.name} (${d.contribution.toFixed(1)})`).join(', ');
-      const breachingSources = candidates.length;
-      const allRoiSum = candidates.reduce((acc, c) => acc + parseInt(c.estimatedROI.replace(/[^0-9]/g, '') || 0), 0);
-
-      const evidence = [
-        this._ev('Composite risk score', `${riskScore}/100`, '< 35 = safe', riskScore >= 55 ? 'BREACH' : riskScore >= 35 ? 'WARNING' : 'OK', 'Model', 'HIGH'),
-        this._ev('Severity level', severity, 'LOW or MEDIUM', severity === 'CRITICAL' || severity === 'HIGH' ? 'BREACH' : 'WARNING', 'Model', 'HIGH'),
-        this._ev('Signal domains with active breaches', `${breachingSources} of 4`, '0 domains', breachingSources >= 3 ? 'BREACH' : breachingSources >= 1 ? 'WARNING' : 'OK', 'Model', 'HIGH'),
-        this._ev('Top risk drivers', topDriverSummary, 'none', 'WARNING', 'Model', 'HIGH'),
-        this._ev('Tactical ROI already identified', `€${allRoiSum}K/qtr`, 'validates pilot investment', 'OK', 'Derived', 'HIGH'),
-      ];
-
-      this._log(`  Hypothesis REC-005 (Strategic pilot decision):`);
-      this._log(`    → Risk score ${riskScore} with ${breachingSources} active domain breach(es) — Option A TRIGGERED`);
-      await this._delay(200);
-
-      candidates.push({
-        id: 'REC-005',
-        priority: 5,
-        category: 'Strategic',
-        action: `Proceed with Option A — controlled Minority Report pilot in ${this.market} + 1 market, launch within 8 weeks`,
-        reasoning: `A risk score of ${riskScore}/100 (${severity}) with ${breachingSources} independent signal domains in breach demonstrates the early-warning system is detecting real commercial risk. The ${candidates.length} tactical recommendations above already map to ~€${allRoiSum}K quarterly ROI — achievable only with the system running live. Option B (pause to re-architect) would delay first value by 12–16 weeks, well beyond the window where these interventions remain effective.`,
-        evidence,
-        confidence: 'HIGH',
-        breachCount: evidence.filter(e => e.status === 'BREACH').length,
-        warningCount: evidence.filter(e => e.status === 'WARNING').length,
-        estimatedVolumeRecovery: `Decline contained to <2% vs ${riskScore >= 65 ? '8–12' : '6–9'}% no-action baseline`,
-        estimatedROI: `€${this._roi(riskScore, 400)}K / quarter across both pilot markets`,
-        effort: 'HIGH',
-        timeToImpact: '8–12 weeks',
-        owner: 'Chapter Lead Data Science + Country MD',
-        kpi: `Volume decline ≤ 2% vs baseline at week 12 · Country MD NPS ≥ 7/10`,
+      recs.push({
+        id: 'REC-002', priority: 2, confidence: conflictData?.conflicts.find(c => c.id === 'CONFLICT-1') ? 'MEDIUM' : 'HIGH',
+        category: 'Revenue Management',
+        headline: `Heineken is ${gap_pct}% above optimal price — you are leaving ${volume_recoverable.toLocaleString()} cases/week on the shelf`,
+        problem: `Heineken shelf price is €${current} vs €${optimal} optimal and €${price.competitor_price} for nearest competitor. At ${gap_pct}% premium, you are losing ~${volume_recoverable.toLocaleString()} cases/week to price-sensitive shoppers.`,
+        the_maths: [
+          { label: 'Current shelf price', value: `€${current}`, source: 'Pricing Tool (W-0)' },
+          { label: 'Optimal price (revenue maximising)', value: `€${optimal}`, source: 'Pricing Tool model' },
+          { label: 'Price gap', value: `€${(current - optimal).toFixed(2)} = ${gap_pct}% above optimal`, source: 'Calculated' },
+          { label: 'Price elasticity', value: `${elasticity} (each 1% price rise = ${Math.abs(elasticity)}% volume loss)`, source: 'Pricing Tool (NB: MMM uses -1.4 — see Model Conflicts)' },
+          { label: 'Volume drag from over-pricing', value: `${gap_pct}% × ${Math.abs(elasticity)} elasticity = ${(vol_drag_pct * 100).toFixed(1)}% · ${volume_recoverable.toLocaleString()} cases/week`, source: 'Derived' },
+        ],
+        do_nothing: {
+          formula: `${volume_recoverable.toLocaleString()} cases/wk × 52 weeks × €${allData.profile.revenue_per_case} = €${(volume_recoverable * allData.profile.revenue_per_case * 52).toLocaleString()} annual revenue foregone`,
+          value: revenue_uplift, currency: 'EUR',
+          caveat: 'Note: MMM elasticity is -1.4 (lower). Annual impact range: €' + Math.round(revenue_uplift * 0.78 / 1000) + 'K–€' + Math.round(revenue_uplift / 1000) + 'K',
+        },
+        action: `Introduce 4-pack promo at €7.99 (implied €2.00/unit) at Albert Heijn and Jumbo for 4 weeks. Review and reset base price in next quarterly price round.`,
+        owner: 'Commercial Director',
+        deadline: 'Next promotion slot (≤ 3 weeks)',
+        cost: { value: promo_cost, currency: 'EUR', description: 'Promo funding @ ~€0.18/case on recoverable volume for 1 year' },
+        roi: {
+          one_time: null,
+          quarterly: parseFloat((revenue_uplift / 4 / (promo_cost / 4)).toFixed(1)),
+          formula: `€${(revenue_uplift / 1000).toFixed(0)}K revenue ÷ €${(promo_cost / 1000).toFixed(0)}K promo cost = ${roi_annual}x annual ROI`,
+        },
+        evidence_from: ['Pricing Tool', 'Model Conflict Agent (use Pricing Tool elasticity -1.8 for short-term)'],
+        confidence_note: conflictData?.conflicts.find(c => c.id === 'CONFLICT-1')
+          ? `⚠ MMM (−1.4) and Pricing Tool (−1.8) disagree on elasticity. Range: ${Math.round(revenue_uplift * 0.78 / 1000)}K–${Math.round(revenue_uplift / 1000)}K. Action is correct in both cases.`
+          : null,
       });
+
+      this._log(`  REC-002 (Pricing): €${current} vs €${optimal} optimal · recoverable ${volume_recoverable.toLocaleString()} cases/wk · ROI ${roi_annual}x annual`);
     }
+    await this._delay(200);
 
-    // ── Re-rank by number of breaches + risk weight ───────────────────────
-    candidates.sort((a, b) =>
-      (b.breachCount * 2 + b.warningCount) - (a.breachCount * 2 + a.warningCount)
-    );
-    candidates.forEach((c, i) => { c.priority = i + 1; });
+    // ── REC-003: Twin Market leverage (if applicable) ──────────────────────
+    if (twinData && twinData.top_twin && twinData.top_twin.similarity_pct >= 72 && twinData.top_twin.playbook_count > 0) {
+      const twin = twinData.top_twin;
+      recs.push({
+        id: 'REC-003', priority: 3, confidence: 'HIGH',
+        category: 'Efficiency',
+        headline: `${twin.market} (${twin.similarity_pct}% similar) can replicate ${this.market}'s playbooks — save budget NOW`,
+        problem: `${this.market} has built and validated models (MMM, Pricing Tool, replenishment algorithm) that ${twin.market} needs but doesn't have. Instead of rebuilding from scratch, transfer and recalibrate.`,
+        the_maths: [
+          { label: 'Market similarity score', value: `${twin.similarity_pct}%`, source: 'Twin Market Agent (7-indicator weighted similarity)' },
+          { label: 'Playbooks transferable', value: `${twin.playbook_count} playbook(s)`, source: 'Capability gap analysis' },
+          { label: 'Estimated build-from-scratch cost', value: `€${(twin.playbook_count * 55).toLocaleString()}K–€${(twin.playbook_count * 80).toLocaleString()}K`, source: 'Industry benchmark (MMM: €35K, Pricing Tool: €25K, etc.)' },
+          { label: 'Transfer + recalibration cost', value: `€${(twin.playbook_count * 18).toLocaleString()}K–€${(twin.playbook_count * 28).toLocaleString()}K`, source: 'Estimated from past transfers' },
+          { label: 'Saving vs build-from-scratch', value: `€${(twin.playbook_count * 32).toLocaleString()}K–€${(twin.playbook_count * 55).toLocaleString()}K + ${twin.playbook_count * 6}–${twin.playbook_count * 10} weeks faster`, source: 'Derived' },
+        ],
+        do_nothing: {
+          formula: `${twin.market} builds from scratch: €${(twin.playbook_count * 55).toLocaleString()}K–€${(twin.playbook_count * 80).toLocaleString()}K + ${twin.playbook_count * 14} weeks = no tools for ${twin.playbook_count * 14 / 4} months`,
+          value: twin.playbook_count * 67000, currency: 'EUR',
+        },
+        action: twin.transferable_playbooks.map(p => `• ${p.type}: ${p.effort}`).join('\n'),
+        owner: 'Regional Analytics Lead',
+        deadline: 'Next quarterly planning cycle',
+        cost: { value: twin.playbook_count * 23000, currency: 'EUR', description: 'Transfer, integration, and recalibration effort' },
+        roi: {
+          one_time: parseFloat((twin.playbook_count * 67000 / (twin.playbook_count * 23000)).toFixed(1)),
+          formula: `€${(twin.playbook_count * 67).toFixed(0)}K saved ÷ €${(twin.playbook_count * 23).toFixed(0)}K investment = ${(67 / 23).toFixed(1)}x — plus ${twin.playbook_count * 8} weeks faster time-to-insight`,
+        },
+        evidence_from: ['Twin Market Agent'],
+      });
+      this._log(`  REC-003 (Twin markets): Transfer to ${twin.market} · ${twin.playbook_count} playbook(s) · save €${(twin.playbook_count * 32).toLocaleString()}K`);
+    }
+    await this._delay(200);
 
-    this._log(`✅ ${candidates.length} recommendation(s) generated (evidence-driven, threshold-gated)`);
-    this._log(`   Priority order: ${candidates.map(c => c.id).join(' → ')}`);
+    this._log(`✅ Recommendation Agent complete: ${recs.length} recommendation(s) generated`);
+    this._log(`   All recommendations include verifiable arithmetic — no black box numbers`);
 
-    return { recommendations: candidates, logs: this.logs };
+    return { recommendations: recs, logs: this.logs };
   }
 
-  // Build a single evidence item
-  _ev(signal, observed, threshold, status, dataSource, quality) {
-    return { signal, observed, threshold, status, dataSource, quality };
-  }
-
-  // Derive confidence from the quality of the underlying evidence signals
-  _confidence(evidence, sourceReport) {
-    const qualityMap = {};
-    (sourceReport || []).forEach(s => { qualityMap[s.source] = s.quality; });
-    const qualityScores = { HIGH: 1, MEDIUM: 0.6, LOW: 0.3 };
-    const scores = evidence.map(e => {
-      const src = (e.dataSource || '').toLowerCase().replace(/\s.*/, '');
-      const q = qualityMap[src] || e.quality || 'MEDIUM';
-      return qualityScores[q] ?? 0.5;
-    });
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    if (avg >= 0.85) return 'HIGH';
-    if (avg >= 0.60) return 'MEDIUM';
-    return 'LOW';
-  }
-
-  _roi(riskScore, base) {
-    return Math.round(base * (0.7 + riskScore / 200));
-  }
-
-  _delay(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
+  _delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 }
 
 module.exports = RecommendationAgent;
