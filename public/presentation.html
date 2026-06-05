@@ -3,1289 +3,1062 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Heineken Minority Report — Presentation</title>
+<title>Heineken — AI Early Warning System · June 2026</title>
 <style>
-/* ═══════════════════════════════════════════════════════════
-   HEINEKEN MINORITY REPORT — PRESENTATION
-   Brand: Green #00843D · Dark #005C28 · Gold #FFC72C · Red #CE1126
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   HEINEKEN AI EARLY WARNING — PRESENTATION
+   Brand: Green #00843D · Dark #005C28 · Gold #FFC72C
+   Theme: LIGHT / executive — white & gray, not dark mode
+   ═══════════════════════════════════════════════════════════════ */
 :root {
   --g:   #00843D;
   --gd:  #005C28;
-  --gl:  #e8f5ee;
+  --gl:  #E8F5EE;
   --gold:#FFC72C;
-  --red: #CE1126;
+  --gold-dark:#92400E;
+  --red: #DC2626;
+  --red-bg: #FEF2F2;
+  --orange:#EA580C;
+  --blue: #2563EB;
+  --blue-bg:#EFF6FF;
   --w:   #FFFFFF;
-  --off: #F8F9FA;
-  --g1:  #F4F6F8;
-  --g2:  #E8EAED;
-  --g4:  #9AA0A6;
-  --g7:  #3C4043;
-  --g9:  #1A1C1E;
-  --font:'Segoe UI',system-ui,sans-serif;
+  --bg:  #F3F4F6;
+  --t1:  #111827;
+  --t2:  #374151;
+  --t3:  #6B7280;
+  --t4:  #9CA3AF;
+  --border:#E5E7EB;
+  --font:'Segoe UI', system-ui, sans-serif;
+  --mono:'Courier New', monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);background:#000}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font);background:#E5E7EB;}
 
-/* ── Deck container ── */
-.deck{
-  width:100vw;height:100vh;
-  position:relative;
-  overflow:hidden;
-}
+/* ── Deck ── */
+.deck{width:100vw;height:100vh;position:relative;overflow:hidden;}
 
 /* ── Slide base ── */
 .slide{
   position:absolute;inset:0;
   display:flex;flex-direction:column;
   opacity:0;pointer-events:none;
-  transition:opacity .55s ease, transform .55s ease;
-  transform:translateX(60px);
+  transition:opacity .45s ease, transform .45s ease;
+  transform:translateX(50px);
   background:var(--w);
 }
-.slide.active{
-  opacity:1;pointer-events:all;transform:translateX(0);
-}
-.slide.exit{
-  opacity:0;transform:translateX(-60px);
-}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.exit{opacity:0;transform:translateX(-50px);}
 
-/* ── Nav bar (bottom) ── */
+/* ── Nav bar ── */
 .nav-bar{
-  position:fixed;bottom:0;left:0;right:0;
-  height:52px;
+  position:fixed;bottom:0;left:0;right:0;height:50px;
   background:var(--gd);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 2rem;
-  z-index:1000;
-  box-shadow:0 -2px 12px rgba(0,0,0,0.3);
+  padding:0 24px;z-index:1000;
+  box-shadow:0 -2px 12px rgba(0,0,0,.3);
 }
-.nav-bar .brand{
-  display:flex;align-items:center;gap:10px;
-  font-size:.78rem;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);
-}
-.nav-bar .star{color:var(--gold);font-size:1.3rem;}
-.nav-dots{display:flex;gap:6px;align-items:center;}
-.dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(255,255,255,.3);
-  cursor:pointer;transition:all .2s;
-}
-.dot.active{background:var(--gold);width:22px;border-radius:4px;}
+.nb-brand{font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.6);}
+.nb-star{color:var(--gold);}
+.nav-dots{display:flex;gap:5px;align-items:center;}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .2s;}
+.dot.active{background:var(--gold);width:20px;border-radius:4px;}
 .nav-btns{display:flex;gap:8px;}
-.nav-btn{
-  padding:6px 18px;border-radius:20px;border:none;
-  font-size:.78rem;font-weight:700;cursor:pointer;
-  transition:all .2s;
-}
-.nav-prev{background:rgba(255,255,255,.15);color:var(--w);}
+.nav-btn{padding:5px 16px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.nav-prev{background:rgba(255,255,255,.15);color:#fff;}
 .nav-prev:hover{background:rgba(255,255,255,.25);}
 .nav-next{background:var(--gold);color:var(--gd);}
 .nav-next:hover{background:#ffdb6b;}
-.slide-counter{font-size:.75rem;color:rgba(255,255,255,.5);}
+.slide-ctr{font-size:11px;color:rgba(255,255,255,.4);}
 
-/* ═══════════ SLIDE LAYOUTS ═══════════ */
+/* ── Progress ── */
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--g));transition:width .4s;z-index:2000;}
+.kbd-hint{position:fixed;bottom:58px;right:16px;font-size:10px;color:rgba(0,0,0,.25);pointer-events:none;z-index:999;}
 
-/* ── Cover slide ── */
-.cover{
-  background:linear-gradient(155deg,var(--gd) 0%,var(--g) 55%,#007a38 100%);
-  justify-content:center;align-items:center;
-  padding-bottom:52px;
-}
-.cover-inner{text-align:center;color:var(--w);max-width:900px;padding:0 2rem;}
-.cover-star{font-size:5rem;color:var(--gold);line-height:1;margin-bottom:1rem;
-  filter:drop-shadow(0 0 20px rgba(255,199,44,.6));
-  animation:floatStar 3s ease-in-out infinite;}
-@keyframes floatStar{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.cover-brand{font-size:1rem;font-weight:800;letter-spacing:6px;color:rgba(255,255,255,.7);margin-bottom:.5rem;}
-.cover-title{font-size:3.2rem;font-weight:900;line-height:1.1;margin-bottom:.8rem;}
+/* ═══ SLIDE TYPES ═══ */
+
+/* Cover: green gradient */
+.cover{background:linear-gradient(150deg,var(--gd) 0%,var(--g) 55%,#007a38 100%);justify-content:center;align-items:center;padding-bottom:50px;}
+.cover-inner{text-align:center;color:#fff;max-width:920px;padding:0 40px;}
+.cover-star{font-size:60px;color:var(--gold);line-height:1;margin-bottom:16px;filter:drop-shadow(0 0 18px rgba(255,199,44,.6));animation:floatStar 3s ease-in-out infinite;}
+@keyframes floatStar{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.cover-brand{font-size:11px;font-weight:800;letter-spacing:5px;color:rgba(255,255,255,.6);margin-bottom:6px;}
+.cover-title{font-size:3rem;font-weight:900;line-height:1.1;margin-bottom:12px;}
 .cover-title span{color:var(--gold);}
-.cover-sub{font-size:1.1rem;color:rgba(255,255,255,.8);line-height:1.6;max-width:620px;margin:0 auto 2rem;}
-.cover-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.pill{
-  padding:6px 16px;border-radius:20px;
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.3);
-  font-size:.78rem;font-weight:600;color:var(--w);
-}
-.cover-date{margin-top:2rem;font-size:.75rem;color:rgba(255,255,255,.4);}
+.cover-sub{font-size:15px;color:rgba(255,255,255,.8);line-height:1.7;max-width:640px;margin:0 auto 24px;}
+.cover-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.cpill{padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-size:11px;font-weight:600;color:#fff;}
+.cover-date{margin-top:20px;font-size:11px;color:rgba(255,255,255,.35);}
 
-/* ── Section header ── */
-.section-header{
-  background:linear-gradient(135deg,var(--gd),var(--g));
-  color:var(--w);
-  justify-content:center;align-items:center;
-  padding-bottom:52px;
-  text-align:center;
-}
-.section-header .sec-num{font-size:5rem;font-weight:900;color:rgba(255,255,255,.1);line-height:1;}
-.section-header .sec-label{font-size:.8rem;font-weight:700;letter-spacing:3px;color:var(--gold);margin-bottom:.4rem;}
-.section-header .sec-title{font-size:2.8rem;font-weight:900;color:var(--w);}
-.section-header .sec-sub{font-size:1rem;color:rgba(255,255,255,.7);margin-top:.6rem;}
+/* Content slides */
+.cs{padding:40px 56px 70px;overflow-y:auto;}
+.cs.tight{padding:28px 48px 70px;}
+.stag{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--g);text-transform:uppercase;margin-bottom:4px;}
+.stitle{font-size:28px;font-weight:900;color:var(--t1);border-bottom:4px solid var(--gold);display:inline-block;padding-bottom:4px;margin-bottom:20px;}
+.stitle.sm{font-size:22px;}
 
-/* ── Content slide ── */
-.content-slide{
-  padding:3rem 4rem 80px;
-  overflow-y:auto;
-}
-.slide-tag{
-  font-size:.7rem;font-weight:700;letter-spacing:2px;
-  color:var(--g);text-transform:uppercase;margin-bottom:.4rem;
-}
-.slide-title{
-  font-size:1.9rem;font-weight:900;color:var(--g9);
-  border-bottom:4px solid var(--gold);display:inline-block;
-  padding-bottom:.3rem;margin-bottom:1.5rem;
-}
-.slide-title.white{color:var(--w);border-color:var(--gold);}
+/* Section break: green header */
+.sec-break{background:linear-gradient(135deg,var(--gd),var(--g));justify-content:center;align-items:center;padding-bottom:50px;text-align:center;}
+.sb-num{font-size:80px;font-weight:900;color:rgba(255,255,255,.08);line-height:1;}
+.sb-label{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--gold);margin-bottom:4px;}
+.sb-title{font-size:40px;font-weight:900;color:#fff;}
+.sb-sub{font-size:14px;color:rgba(255,255,255,.7);margin-top:8px;}
 
-/* ── Two column ── */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;}
-.four-col{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;}
+/* Grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.gwide{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start;}
 
-/* ── Cards ── */
-.card{
-  background:var(--g1);border-radius:14px;padding:1.4rem 1.5rem;
-  border:1px solid var(--g2);
-}
-.card.green{background:linear-gradient(135deg,var(--g),var(--gd));color:var(--w);}
-.card.gold{background:linear-gradient(135deg,var(--gold),#ffaa00);color:var(--gd);}
-.card.dark{background:var(--g9);color:var(--w);}
-.card.red-border{border-left:5px solid var(--red);}
-.card.gold-border{border-left:5px solid var(--gold);}
-.card.green-border{border-left:5px solid var(--g);}
+/* Cards */
+.card{background:var(--bg);border-radius:10px;padding:18px 20px;border:1px solid var(--border);}
+.card.green{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;}
+.card.gold-bg{background:linear-gradient(135deg,#FFF8DB,#FFF0A0);border:1px solid #F5D020;}
+.card.rb{border-left:4px solid var(--red);}
+.card.gb{border-left:4px solid var(--g);}
+.card.ob{border-left:4px solid var(--orange);}
+.card.bb{border-left:4px solid var(--blue);}
+.clabel{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:4px;}
+.clabel.w{color:rgba(255,255,255,.6);}
+.ctitle{font-size:15px;font-weight:800;color:var(--t1);margin-bottom:4px;}
+.ctitle.w{color:#fff;}
+.cbody{font-size:13px;color:var(--t2);line-height:1.6;}
+.cbody.w{color:rgba(255,255,255,.85);}
+.cnum{font-size:32px;font-weight:900;color:var(--g);line-height:1;}
+.cnum.red{color:var(--red);}
+.cnum.gold{color:#B45309;}
+.cnum.w{color:#fff;}
 
-.card-icon{font-size:2rem;margin-bottom:.6rem;display:block;}
-.card-label{font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:.3rem;}
-.card-label.w{color:rgba(255,255,255,.6);}
-.card-title{font-size:1.05rem;font-weight:800;color:var(--g9);margin-bottom:.4rem;}
-.card-title.w{color:var(--w);}
-.card-body{font-size:.84rem;color:var(--g7);line-height:1.6;}
-.card-body.w{color:rgba(255,255,255,.8);}
+/* Pills / badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-green{background:#DCFCE7;color:#15803d;}
+.b-yellow{background:#FEF9C3;color:#92400e;}
+.b-red{background:#FEE2E2;color:#b91c1c;}
+.b-gray{background:#F3F4F6;color:#374151;}
+.b-blue{background:#DBEAFE;color:#1d4ed8;}
+.b-orange{background:#FFEDD5;color:#c2410c;}
 
-/* ── Big stat ── */
-.big-stat{text-align:center;padding:1.5rem 1rem;}
-.big-num{font-size:2.8rem;font-weight:900;color:var(--g);line-height:1;}
-.big-num.gold{color:var(--gold);}
-.big-num.red{color:var(--red);}
-.big-label{font-size:.78rem;color:var(--g4);margin-top:.3rem;font-weight:600;}
-
-/* ── Timeline / pipeline ── */
-.timeline{display:flex;flex-direction:column;gap:0;}
-.tl-item{
-  display:flex;align-items:flex-start;gap:1.2rem;
-  padding:1rem 0;
-  border-bottom:1px solid var(--g2);
-}
+/* Timeline list */
+.tl{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
 .tl-item:last-child{border-bottom:none;}
-.tl-num{
-  min-width:36px;height:36px;border-radius:50%;
-  background:var(--g);color:var(--w);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.85rem;font-weight:800;flex-shrink:0;margin-top:2px;
-}
-.tl-content .tl-title{font-size:.95rem;font-weight:700;color:var(--g9);}
-.tl-content .tl-desc{font-size:.82rem;color:var(--g7);margin-top:.25rem;line-height:1.5;}
+.tl-num{min-width:34px;height:34px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.tl-num.red{background:var(--red);}
+.tl-title{font-size:14px;font-weight:700;color:var(--t1);}
+.tl-desc{font-size:12.5px;color:var(--t2);margin-top:3px;line-height:1.5;}
 
-/* ── Agent pipeline visual ── */
-.agent-pipe{display:flex;align-items:center;gap:0;width:100%;}
-.agent-box{
-  flex:1;
-  background:var(--g1);border-radius:10px;border:2px solid var(--g2);
-  padding:.9rem .7rem;text-align:center;
-  transition:all .3s;
-}
-.agent-box:hover{border-color:var(--g);background:var(--gl);}
-.agent-icon{font-size:1.6rem;margin-bottom:.35rem;}
-.agent-name{font-size:.72rem;font-weight:800;color:var(--g9);line-height:1.2;}
-.agent-role{font-size:.66rem;color:var(--g4);margin-top:.2rem;}
-.pipe-arrow{font-size:1.3rem;color:var(--g);padding:0 .3rem;flex-shrink:0;font-weight:900;}
+/* Agent pipeline row */
+.pipe-row{display:flex;align-items:center;gap:0;width:100%;}
+.pipe-box{flex:1;background:var(--bg);border-radius:8px;border:2px solid var(--border);padding:12px 8px;text-align:center;transition:all .2s;}
+.pipe-box:hover{border-color:var(--g);background:var(--gl);}
+.pipe-box.super{border-color:var(--blue);background:var(--blue-bg);}
+.pipe-icon{font-size:22px;margin-bottom:4px;}
+.pipe-name{font-size:10px;font-weight:800;color:var(--t1);line-height:1.3;}
+.pipe-role{font-size:10px;color:var(--t3);margin-top:2px;}
+.pipe-arrow{font-size:18px;color:var(--g);padding:0 4px;flex-shrink:0;font-weight:900;}
 
-/* ── Data source table ── */
-.ds-table{width:100%;border-collapse:collapse;font-size:.82rem;}
-.ds-table th{
-  text-align:left;padding:8px 12px;
-  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
-  color:var(--g4);border-bottom:2px solid var(--g2);
-}
-.ds-table td{padding:10px 12px;border-bottom:1px solid var(--g2);color:var(--g7);}
-.ds-table tr:last-child td{border-bottom:none;}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;}
-.badge.high{background:#dcfce7;color:#166534;}
-.badge.med{background:#fef3c7;color:#92400e;}
-.badge.low{background:#fee2e2;color:#991b1b;}
-.badge.green{background:var(--gl);color:var(--gd);}
+/* Math box: the simple arithmetic section */
+.math-box{background:#F9FAFB;border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.math-row{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
+.math-row:last-child{border-bottom:none;}
+.math-label{font-size:12px;color:var(--t3);width:200px;flex-shrink:0;}
+.math-val{font-size:14px;font-weight:700;color:var(--t1);font-family:var(--mono);}
+.math-val.red{color:var(--red);}
+.math-val.green{color:var(--g);}
+.math-src{font-size:10px;color:var(--t4);margin-left:auto;}
 
-/* ── Risk radar visual ── */
-.risk-bars{display:flex;flex-direction:column;gap:.7rem;}
-.risk-bar-row{display:flex;align-items:center;gap:.8rem;}
-.risk-bar-label{font-size:.78rem;font-weight:600;color:var(--g7);width:110px;flex-shrink:0;}
-.risk-bar-track{flex:1;height:10px;background:var(--g2);border-radius:5px;overflow:hidden;}
-.risk-bar-fill{height:100%;border-radius:5px;transition:width 1s ease;}
-.risk-bar-val{font-size:.75rem;font-weight:700;color:var(--g9);width:36px;text-align:right;flex-shrink:0;}
+/* Conflict card */
+.conflict-card{border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px;}
+.conflict-card.sev-high{border-left:4px solid var(--red);}
+.conflict-card.sev-medium{border-left:4px solid var(--orange);}
+.conflict-head{background:#F9FAFB;padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.cf-id{font-size:10px;font-weight:700;color:var(--t3);font-family:var(--mono);}
+.cf-dim{font-size:14px;font-weight:700;color:var(--t1);flex:1;}
+.conflict-body{padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.5px;}
+.cf-tool{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.cf-val{color:var(--t2);}
+.cf-val.conflict{color:var(--red);font-weight:600;}
+.cf-resolution{grid-column:1/-1;background:var(--gl);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--gd);}
 
-/* ── Alert cards ── */
-.alert-card{
-  border-radius:10px;padding:1rem 1.2rem;
-  border-left:5px solid;margin-bottom:.7rem;
-}
-.alert-card.critical{border-color:#dc2626;background:#fef2f2;}
-.alert-card.high{border-color:#f97316;background:#fff7ed;}
-.alert-card.medium{border-color:#eab308;background:#fefce8;}
-.alert-sev{font-size:.7rem;font-weight:800;letter-spacing:1px;margin-bottom:.3rem;}
-.alert-card.critical .alert-sev{color:#dc2626;}
-.alert-card.high .alert-sev{color:#f97316;}
-.alert-card.medium .alert-sev{color:#ca8a04;}
-.alert-head{font-size:.9rem;font-weight:700;color:var(--g9);}
-.alert-meta{font-size:.73rem;color:var(--g4);margin-top:.3rem;}
+/* Signal table */
+.sig-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sig-table th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);background:#F9FAFB;border-bottom:2px solid var(--border);}
+.sig-table td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle;}
+.sig-table tr:last-child td{border-bottom:none;}
 
-/* ── Recommendation cards ── */
-.rec-card{
-  background:var(--g1);border-radius:12px;border:1px solid var(--g2);
-  padding:1.1rem 1.2rem;position:relative;
-}
-.rec-num{
-  position:absolute;top:-10px;left:14px;
-  background:var(--g);color:var(--w);
-  font-size:.68rem;font-weight:800;padding:2px 10px;border-radius:10px;
-}
-.rec-cat{font-size:.68rem;font-weight:700;letter-spacing:.8px;color:var(--g);text-transform:uppercase;margin-bottom:.3rem;margin-top:.3rem;}
-.rec-title{font-size:.9rem;font-weight:800;color:var(--g9);margin-bottom:.3rem;}
-.rec-roi{font-size:.78rem;font-weight:700;color:var(--g);margin-top:.4rem;}
-.rec-effort{
-  display:inline-block;padding:2px 8px;border-radius:8px;font-size:.68rem;font-weight:700;
-  margin-top:.3rem;
-}
-.eff-low{background:#dcfce7;color:#166534;}
-.eff-med{background:#fef3c7;color:#92400e;}
-.eff-high{background:#fee2e2;color:#991b1b;}
+/* Twin similarity bar */
+.twin-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.twin-row:last-child{border-bottom:none;}
+.twin-flag{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.twin-name{font-size:13px;font-weight:600;color:var(--t1);width:100px;flex-shrink:0;}
+.twin-bar-bg{flex:1;background:var(--border);border-radius:4px;height:8px;}
+.twin-bar-fill{height:100%;border-radius:4px;}
+.twin-pct{font-size:14px;font-weight:700;color:var(--t1);width:44px;text-align:right;flex-shrink:0;}
+.twin-note{font-size:11px;color:var(--t3);width:220px;flex-shrink:0;}
 
-/* ── Quote ── */
-.quote-block{
-  border-left:5px solid var(--gold);
-  background:var(--gl);
-  padding:1.2rem 1.5rem;
-  border-radius:0 12px 12px 0;
-  font-size:1.05rem;font-style:italic;color:var(--gd);font-weight:600;
-  line-height:1.7;
-}
-.quote-author{font-size:.78rem;font-weight:700;color:var(--g4);margin-top:.6rem;font-style:normal;}
+/* ROI block */
+.roi-box{background:var(--gl);border:1px solid #BBF7D0;border-radius:10px;padding:20px;text-align:center;}
+.roi-num{font-size:48px;font-weight:900;color:var(--g);line-height:1;}
+.roi-label{font-size:11px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+.roi-formula{font-size:11.5px;color:var(--t3);margin-top:8px;font-family:var(--mono);line-height:1.5;}
 
-/* ── Value proposition big ── */
-.value-hero{
-  background:linear-gradient(135deg,var(--gd),var(--g));
-  border-radius:16px;padding:2rem;color:var(--w);text-align:center;margin-bottom:1.5rem;
-}
-.value-hero .vh-num{font-size:3.5rem;font-weight:900;color:var(--gold);}
-.value-hero .vh-label{font-size:.9rem;color:rgba(255,255,255,.8);}
+.dn-box{background:var(--red-bg);border:1px solid #FECACA;border-radius:10px;padding:16px;}
+.dn-label{font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.dn-formula{font-size:12px;color:#7F1D1D;font-family:var(--mono);}
 
-/* ── Dark slide ── */
-.dark-slide{
-  background:var(--g9);
-  padding:3rem 4rem 80px;
-  overflow-y:auto;
-}
+/* Region capability dot */
+.dot-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
+.d-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);}
+.d{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.d-good{background:var(--g);}
+.d-partial{background:#CA8A04;}
+.d-poor{background:var(--orange);}
+.d-none{background:#D1D5DB;}
 
-/* ── Option A/B ── */
-.option-box{
-  border-radius:14px;padding:1.5rem;border:2px solid;
-}
-.option-a{border-color:var(--g);background:var(--gl);}
-.option-b{border-color:var(--g2);background:var(--g1);opacity:.7;}
-.option-badge{
-  display:inline-block;padding:4px 14px;border-radius:10px;
-  font-size:.75rem;font-weight:800;letter-spacing:1px;margin-bottom:.8rem;
-}
-.opt-a-badge{background:var(--g);color:var(--w);}
-.opt-b-badge{background:var(--g2);color:var(--g4);}
-.option-title{font-size:1.1rem;font-weight:800;color:var(--g9);margin-bottom:.5rem;}
-.option-pros{list-style:none;display:flex;flex-direction:column;gap:.35rem;}
-.option-pros li{font-size:.82rem;color:var(--g7);display:flex;gap:.5rem;align-items:flex-start;}
-.option-pros li::before{content:'✔';color:var(--g);font-weight:900;flex-shrink:0;}
-.option-cons li::before{content:'✗';color:var(--red) !important;}
-
-/* ── Responsible AI ── */
-.rai-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
-.rai-card{border-radius:12px;padding:1.1rem;background:var(--g1);border:1px solid var(--g2);text-align:center;}
-.rai-icon{font-size:1.8rem;margin-bottom:.5rem;}
-.rai-title{font-size:.85rem;font-weight:800;color:var(--g9);margin-bottom:.3rem;}
-.rai-desc{font-size:.76rem;color:var(--g7);line-height:1.5;}
-
-/* ── Final CTA ── */
-.cta-slide{
-  background:linear-gradient(155deg,var(--gd) 0%,var(--g) 60%,#007a38 100%);
-  justify-content:center;align-items:center;padding-bottom:52px;
-  text-align:center;
-}
-.cta-inner{max-width:800px;padding:0 2rem;color:var(--w);}
-.cta-star{font-size:4rem;color:var(--gold);margin-bottom:1rem;}
-.cta-title{font-size:2.8rem;font-weight:900;margin-bottom:1rem;}
+/* CTA final */
+.cta-slide{background:linear-gradient(150deg,var(--gd) 0%,var(--g) 60%,#007a38 100%);justify-content:center;align-items:center;padding-bottom:50px;text-align:center;}
+.cta-inner{max-width:800px;padding:0 40px;color:#fff;}
+.cta-star{font-size:56px;color:var(--gold);margin-bottom:16px;}
+.cta-title{font-size:2.6rem;font-weight:900;margin-bottom:12px;}
 .cta-title span{color:var(--gold);}
-.cta-sub{font-size:1rem;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:2rem;max-width:580px;margin-left:auto;margin-right:auto;}
-.cta-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
-.cta-btn{
-  padding:12px 28px;border-radius:28px;font-size:.9rem;font-weight:800;
-  cursor:pointer;border:none;transition:all .2s;
-}
-.cta-btn-primary{background:var(--gold);color:var(--gd);}
-.cta-btn-primary:hover{background:#ffdb6b;transform:translateY(-2px);}
-.cta-btn-secondary{background:rgba(255,255,255,.15);color:var(--w);border:2px solid rgba(255,255,255,.3);}
-.cta-btn-secondary:hover{background:rgba(255,255,255,.25);}
+.cta-sub{font-size:15px;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:24px;max-width:580px;margin-left:auto;margin-right:auto;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.cta-btn{padding:12px 28px;border-radius:28px;font-size:14px;font-weight:800;cursor:pointer;border:none;transition:all .2s;}
+.cta-p{background:var(--gold);color:var(--gd);}
+.cta-s{background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.3);}
 
-/* ── Progress bar ── */
-.progress-bar{
-  position:fixed;top:0;left:0;height:3px;
-  background:linear-gradient(90deg,var(--gold),var(--g));
-  transition:width .4s ease;z-index:2000;
-}
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.slide.active .a{animation:fadeUp .45s ease forwards;}
+.slide.active .a1{animation-delay:.08s;opacity:0;}
+.slide.active .a2{animation-delay:.22s;opacity:0;}
+.slide.active .a3{animation-delay:.36s;opacity:0;}
+.slide.active .a4{animation-delay:.50s;opacity:0;}
+.slide.active .a5{animation-delay:.64s;opacity:0;}
 
-/* ── Keyboard hint ── */
-.kbd-hint{
-  position:fixed;bottom:60px;right:1.5rem;
-  font-size:.65rem;color:rgba(255,255,255,.35);
-  pointer-events:none;z-index:999;
-}
-
-/* ── Animations ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.slide.active .animate{animation:fadeUp .5s ease forwards;}
-.slide.active .animate-1{animation-delay:.1s;opacity:0;}
-.slide.active .animate-2{animation-delay:.25s;opacity:0;}
-.slide.active .animate-3{animation-delay:.4s;opacity:0;}
-.slide.active .animate-4{animation-delay:.55s;opacity:0;}
-.slide.active .animate-5{animation-delay:.7s;opacity:0;}
-
-/* responsive */
 @media(max-width:900px){
-  .two-col,.three-col,.four-col,.rai-grid{grid-template-columns:1fr;}
-  .content-slide{padding:1.5rem 1.5rem 80px;}
+  .g2,.g3,.g4,.gwide{grid-template-columns:1fr;}
+  .cs,.cs.tight{padding:20px 20px 70px;}
   .cover-title{font-size:2rem;}
-  .agent-pipe{flex-wrap:wrap;}
+  .pipe-row{flex-wrap:wrap;}
 }
 </style>
 </head>
 <body>
 
 <div class="progress-bar" id="progress"></div>
-<div class="kbd-hint">← → arrow keys or click to navigate</div>
+<div class="kbd-hint">← → arrow keys · click to advance</div>
 
 <div class="deck" id="deck">
 
-<!-- ══════════════════════════════════════════════════════════
+
+<!-- ════════════════════════════════════════════════════════════════
      SLIDE 1 — COVER
-══════════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════════════════════ -->
 <div class="slide cover active" id="s1">
   <div class="cover-inner">
-    <div class="cover-star animate animate-1">★</div>
-    <div class="cover-brand animate animate-1">HEINEKEN</div>
-    <h1 class="cover-title animate animate-2">
-      Project <span>Minority Report</span><br/>AI Early Warning System
-    </h1>
-    <p class="cover-sub animate animate-3">
-      An AI Agent pipeline that detects sell-out volume risk in Modern Trade,
-      alerts the right leaders, and recommends precise corrective actions —
-      before the decline becomes visible in actuals.
+    <div class="cover-star a a1">★</div>
+    <div class="cover-brand a a1">HEINEKEN</div>
+    <h1 class="cover-title a a2">Project <span>Minority Report</span><br/>AI Early Warning System</h1>
+    <p class="cover-sub a a3">
+      A 6-agent AI pipeline that solves the <strong>five real constraints</strong> in Heineken's commercial data stack —
+      fragmented freshness, conflicting models, distributed teams, budget ceilings, and the Country MD's need
+      for ROI they can verify with a calculator.
     </p>
-    <div class="cover-pills animate animate-4">
-      <span class="pill">🤖 4 AI Agents</span>
-      <span class="pill">🇳🇱 Netherlands Pilot</span>
-      <span class="pill">🇳🇬 Nigeria Pilot</span>
-      <span class="pill">⚡ Real-time Alerts</span>
-      <span class="pill">📈 12-week Horizon</span>
+    <div class="cover-pills a a4">
+      <span class="cpill">🕵️ Super Agent: Signal Normalization</span>
+      <span class="cpill">⚔️ Model Conflict Detection</span>
+      <span class="cpill">🌍 6 Markets</span>
+      <span class="cpill">👯 Twin Market Finder</span>
+      <span class="cpill">📐 Simple-Math ROI</span>
     </div>
-    <div class="cover-date animate animate-5">Chapter Lead, Data Science &amp; Engineering · June 2026 · Confidential POC</div>
+    <div class="cover-date a a5">Chapter Lead, Data Science &amp; Engineering · June 2026 · Confidential POC</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 2 — THE PROBLEM
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s2">
-  <div class="slide-tag animate animate-1">The Challenge</div>
-  <h2 class="slide-title animate animate-1">We can see the iceberg — but too late</h2>
 
-  <div class="two-col animate animate-2">
-    <div>
-      <div class="card red-border" style="margin-bottom:1rem;">
-        <div class="card-title" style="color:var(--red);font-size:1.3rem;">6–10%</div>
-        <div class="card-body">Predicted sell-out volume decline in Modern Trade over the next 12 weeks — flagged by the OpCo.</div>
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 2 — THE REAL PROBLEM (5 CONSTRAINTS)
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs" id="s2">
+  <div class="stag a a1">Why previous tools failed</div>
+  <h2 class="stitle a a1">5 constraints nobody had wired into the system</h2>
+  <div class="g2 a a2">
+    <div class="tl">
+      <div class="tl-item">
+        <div class="tl-num red">1</div>
+        <div>
+          <div class="tl-title">Data arrives at wildly different speeds</div>
+          <div class="tl-desc">POS = 7-day lag. BTL = 21-day lag. Macro = monthly. Distribution = daily. When you mix these raw, your risk score is partly last week's picture and partly last month's. <strong>You're not looking at today.</strong></div>
+        </div>
       </div>
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-num" style="background:var(--red)">!</div>
-          <div class="tl-content">
-            <div class="tl-title">Data arrives fragmented & stale</div>
-            <div class="tl-desc">POS is weekly with 7-day lag. BTL is sporadic with 21-day lag. Macro refreshes monthly. No unified view exists.</div>
-          </div>
+      <div class="tl-item">
+        <div class="tl-num red">2</div>
+        <div>
+          <div class="tl-title">Three tools, three contradictory answers</div>
+          <div class="tl-desc">MMM says price elasticity = −1.4. Pricing Tool says −1.8. A 29% gap in elasticity means the two tools recommend different price actions. MMM shows distribution +12% contribution. The Distribution Planner shows −9.2% OOS drag <em>right now</em>. Nobody reconciles these.</div>
         </div>
-        <div class="tl-item">
-          <div class="tl-num" style="background:var(--red)">!</div>
-          <div class="tl-content">
-            <div class="tl-title">Models give conflicting signals</div>
-            <div class="tl-desc">Marketing mix, pricing/promo tools, and distribution dashboards operate at different granularities and don't talk to each other.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num" style="background:var(--red)">!</div>
-          <div class="tl-content">
-            <div class="tl-title">Decisions are reactive, not predictive</div>
-            <div class="tl-desc">By the time a decline shows in weekly actuals, corrective action is 2–4 weeks behind the curve.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num" style="background:var(--red)">!</div>
-          <div class="tl-content">
-            <div class="tl-title">Leadership has no single source of truth</div>
-            <div class="tl-desc">Country MDs, Commercial Directors and the Global Hub operate from separate backlogs and codebases.</div>
-          </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num red">3</div>
+        <div>
+          <div class="tl-title">Teams, backlogs and models are fragmented by market</div>
+          <div class="tl-desc">Netherlands has 3 data scientists, all 3 models live. Poland has 0 data scientists, 118 backlog items, no models at all. Nigeria: 0 DS, 1 analyst, 203 backlog items. Recommendations written for NL will not run in PL.</div>
         </div>
       </div>
     </div>
-    <div>
-      <div class="card gold-border" style="margin-bottom:1rem;">
-        <div class="card-label">Real-world constraint</div>
-        <div class="card-title">Budget capped for H1 2026</div>
-        <div class="card-body">Leadership expects measurable impact within <strong>one quarter</strong>. Country MDs need clarity on ROI, Responsible AI, and ways of working before committing to broader rollout.</div>
+    <div class="tl">
+      <div class="tl-item">
+        <div class="tl-num red">4</div>
+        <div>
+          <div class="tl-title">Budget capped — can't rebuild everything everywhere</div>
+          <div class="tl-desc">H1 2026 budget does not allow building an MMM from scratch in every market. You need a way to reuse what works in NL across similar markets — but only if the markets are genuinely similar, not just in the same region.</div>
+        </div>
       </div>
-      <div class="quote-block">
-        "We don't need a perfect system in 18 months. We need a working system that protects volume <em>now</em> and learns as it goes."
-        <div class="quote-author">— OpCo Commercial Leadership</div>
+      <div class="tl-item">
+        <div class="tl-num red">5</div>
+        <div>
+          <div class="tl-title">Country MDs want ROI they can verify themselves</div>
+          <div class="tl-desc">When a recommendation says "fix OOS at Albert Heijn" the MD needs to see: <em>how many cases, at what margin, over how many days, at what action cost</em>. Not a model score. Not a probability. Bullet-point arithmetic they can challenge with a calculator.</div>
+        </div>
       </div>
-      <div class="card" style="margin-top:1rem;">
-        <div class="card-label">The question on the table</div>
-        <div class="card-title">Option A vs Option B</div>
-        <div class="card-body">Launch a controlled pilot in 2 markets within 8 weeks (A), or pause to re-architect the entire data platform (B)?</div>
+      <div class="tl-item" style="border-bottom:none">
+        <div class="tl-num" style="background:var(--t3)">→</div>
+        <div>
+          <div class="tl-title">Each constraint maps to a dedicated agent</div>
+          <div class="tl-desc">The architecture is shaped by the five constraints above — not by textbook pipeline design.</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 3 — OUR ANSWER
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s3">
-  <div class="slide-tag animate animate-1">Our Recommendation</div>
-  <h2 class="slide-title animate animate-1">Option A — Controlled Pilot. Now.</h2>
 
-  <div class="two-col animate animate-2">
-    <div class="option-box option-a">
-      <div class="option-badge opt-a-badge">✔ RECOMMENDED — OPTION A</div>
-      <div class="option-title">Launch in 2 markets within 8 weeks</div>
-      <ul class="option-pros">
-        <li>Delivers measurable volume protection within 12 weeks</li>
-        <li>Works with existing data infrastructure — no re-plumbing required</li>
-        <li>Agents learn from market feedback on every cycle</li>
-        <li>Gives Country MDs a working product they can own</li>
-        <li>Establishes ROI evidence for global rollout funding</li>
-        <li>Responsible AI guardrails built in from day one</li>
-      </ul>
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 3 — ARCHITECTURE OVERVIEW
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s3">
+  <div class="stag a a1">System Architecture</div>
+  <h2 class="stitle a a1">6-Agent Pipeline — each agent solves one constraint</h2>
+
+  <div class="pipe-row a a2" style="margin-bottom:20px;">
+    <div class="pipe-box super">
+      <div class="pipe-icon">🕵️</div>
+      <div class="pipe-name">Signal Normalization</div>
+      <div class="pipe-role" style="color:var(--blue)">Constraint 1<br/>Super Agent</div>
     </div>
-    <div class="option-box option-b">
-      <div class="option-badge opt-b-badge">✗ NOT RECOMMENDED — OPTION B</div>
-      <div class="option-title">Pause and re-architect</div>
-      <ul class="option-pros option-cons">
-        <li>Delays first value by 12–16 weeks minimum</li>
-        <li>Burns H1 budget before any commercial impact</li>
-        <li>Loses stakeholder trust during long dark period</li>
-        <li>Perfect architecture won't stop this quarter's decline</li>
-        <li>Creates risk of scope creep and analysis paralysis</li>
-        <li>Cannot demonstrate Responsible AI without a live system</li>
-      </ul>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-box">
+      <div class="pipe-icon">⚔️</div>
+      <div class="pipe-name">Model Conflict</div>
+      <div class="pipe-role">Constraint 2<br/>MMM vs Tools</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-box">
+      <div class="pipe-icon">👯</div>
+      <div class="pipe-name">Twin Market</div>
+      <div class="pipe-role">Constraint 4<br/>Budget leverage</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-box">
+      <div class="pipe-icon">🎯</div>
+      <div class="pipe-name">Risk Detection</div>
+      <div class="pipe-role">Uses normalised<br/>signals</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-box">
+      <div class="pipe-icon">📐</div>
+      <div class="pipe-name">Recommendations</div>
+      <div class="pipe-role">Constraint 5<br/>Simple-math ROI</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-box">
+      <div class="pipe-icon">🔔</div>
+      <div class="pipe-name">Alert Routing</div>
+      <div class="pipe-role">Right person<br/>right channel</div>
     </div>
   </div>
 
-  <div class="four-col animate animate-3" style="margin-top:1.5rem;">
-    <div class="big-stat card">
-      <div class="big-num">8</div>
-      <div class="big-label">weeks to first pilot launch</div>
+  <div class="g3 a a3">
+    <div class="card bb">
+      <div class="clabel">Input (6 streams)</div>
+      <div class="cbody" style="font-size:12px;">POS · ATL · BTL · Pricing · Distribution (daily) · Macro — all with different freshness, different granularity, arriving from disconnected systems</div>
     </div>
-    <div class="big-stat card">
-      <div class="big-num">12</div>
-      <div class="big-label">weeks to measurable impact</div>
+    <div class="card gb">
+      <div class="clabel">What the pipeline adds</div>
+      <div class="cbody" style="font-size:12px;">• Aligns all 6 streams to <em>today</em> using lead-lag<br/>• Surfaces every model contradiction<br/>• Identifies cross-market leverage<br/>• Scores risk on normalised (not stale) data<br/>• Produces verifiable arithmetic</div>
     </div>
-    <div class="big-stat card">
-      <div class="big-num gold">2</div>
-      <div class="big-label">pilot markets (NL + NG)</div>
-    </div>
-    <div class="big-stat card">
-      <div class="big-num" style="color:var(--g);">&lt;2%</div>
-      <div class="big-label">target residual volume decline</div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 4 — WHAT IS MINORITY REPORT
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s4">
-  <div class="slide-tag animate animate-1">The Product</div>
-  <h2 class="slide-title animate animate-1">What is Minority Report?</h2>
-
-  <div class="quote-block animate animate-2" style="margin-bottom:1.5rem;">
-    Minority Report is a <strong>multi-agent AI system</strong> that continuously monitors commercial signals across Modern Trade, computes a real-time sell-out risk score, and autonomously routes alerts and ranked recommendations to the right decision-makers — before volume decline becomes visible in actuals.
-  </div>
-
-  <div class="three-col animate animate-3">
-    <div class="card green">
-      <span class="card-icon">👁</span>
-      <div class="card-label w">DETECT</div>
-      <div class="card-title w">Early Warning</div>
-      <div class="card-body w">Synthesises POS, distribution, pricing, brand and macro signals into a single 0–100 risk score updated every week.</div>
-    </div>
-    <div class="card gold">
-      <span class="card-icon">🔔</span>
-      <div class="card-label" style="color:rgba(0,0,0,.5);">ALERT</div>
-      <div class="card-title" style="color:var(--gd);">Right person, right time</div>
-      <div class="card-body" style="color:var(--gd);">Severity-graded alerts routed to Country MD, Commercial Director, Supply Chain — through Teams, email, or push.</div>
-    </div>
-    <div class="card dark">
-      <span class="card-icon">💡</span>
-      <div class="card-label w">RECOMMEND</div>
-      <div class="card-title w">Ranked Actions</div>
-      <div class="card-body w">AI-generated corrective actions with ROI estimates, effort scores, owner assignment, and KPI targets.</div>
+    <div class="card ob">
+      <div class="clabel">Output</div>
+      <div class="cbody" style="font-size:12px;">Risk score on normalised signals · Conflict resolution table · Twin-market saving estimate · Ranked recommendations with problem / the maths / ROI · Stakeholder alerts</div>
     </div>
   </div>
 
-  <div class="card animate animate-4" style="margin-top:1.5rem;background:var(--gl);border:2px solid var(--g);">
-    <div class="card-label" style="color:var(--g);">LEARN</div>
-    <div class="card-title">Closed-loop feedback</div>
-    <div class="card-body">Every action taken (or not taken) is recorded. The model tracks outcome vs prediction, reweights signal importance, and improves with each 12-week cycle. This is how the system earns trust progressively with Country MDs.</div>
+  <div class="card" style="margin-top:14px;" class="a a4">
+    <div class="clabel">Constraint 3 — Distributed teams / fragmented systems</div>
+    <div class="cbody" style="font-size:12px;">Handled in the data layer (<code>sampleData.js</code>) and Region &amp; Teams dashboard section. Each market's data coverage, model deployment status, team headcount and backlog are visible side-by-side so recommendations are gated on what each market actually has deployed.</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 5 — AGENT ARCHITECTURE
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s5">
-  <div class="slide-tag animate animate-1">Under the Hood</div>
-  <h2 class="slide-title animate animate-1">4-Agent Pipeline Architecture</h2>
 
-  <div class="agent-pipe animate animate-2">
-    <div class="agent-box">
-      <div class="agent-icon">📥</div>
-      <div class="agent-name">Data Ingestion Agent</div>
-      <div class="agent-role">Collects &amp; validates 6 data streams. Scores freshness &amp; quality. Flags gaps.</div>
-    </div>
-    <div class="pipe-arrow">→</div>
-    <div class="agent-box">
-      <div class="agent-icon">⚠️</div>
-      <div class="agent-name">Risk Detection Agent</div>
-      <div class="agent-role">Computes weighted composite risk score 0–100. Identifies top drivers.</div>
-    </div>
-    <div class="pipe-arrow">→</div>
-    <div class="agent-box">
-      <div class="agent-icon">🔔</div>
-      <div class="agent-name">Alert Agent</div>
-      <div class="agent-role">Routes severity-graded alerts to correct stakeholders via right channels.</div>
-    </div>
-    <div class="pipe-arrow">→</div>
-    <div class="agent-box">
-      <div class="agent-icon">💡</div>
-      <div class="agent-name">Recommendation Agent</div>
-      <div class="agent-role">Generates ranked actions with ROI, effort, owner &amp; KPI for each.</div>
-    </div>
-  </div>
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 4 — CONSTRAINT 1: SIGNAL NORMALIZATION (THE SUPER AGENT)
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s4">
+  <div class="stag a a1">Constraint 1 — Data freshness</div>
+  <h2 class="stitle sm a a1">The Super Agent: aligning 6 data streams to <em>today</em></h2>
 
-  <div style="text-align:center;margin:.6rem 0;color:var(--g4);font-size:.78rem;">↑ Orchestrated by the <strong>Orchestrator Agent</strong> which streams reasoning in real-time to the dashboard</div>
-
-  <div class="two-col animate animate-3" style="margin-top:1rem;">
+  <div class="gwide a a2" style="margin-bottom:14px;">
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">Why agents, not a monolith?</h3>
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-num">1</div>
-          <div class="tl-content">
-            <div class="tl-title">Independent deployability</div>
-            <div class="tl-desc">Each agent can be upgraded (e.g., swap Risk Detection for a new ML model) without touching the rest of the pipeline.</div>
-          </div>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.6;">
+        The pipeline does not average stale and fresh signals together.
+        Instead, the Signal Normalization Agent identifies which signal is fresh,
+        finds the historically-proven lead indicator for each stale signal,
+        applies the regression-derived beta coefficient,
+        and produces a <strong>probabilistic estimate of today's value</strong> — with confidence interval.
+      </p>
+      <div class="math-box">
+        <div class="math-row">
+          <span class="math-label">POS last reported</span>
+          <span class="math-val">9,300 cases/wk</span>
+          <span class="math-src">7 days ago</span>
         </div>
-        <div class="tl-item">
-          <div class="tl-num">2</div>
-          <div class="tl-content">
-            <div class="tl-title">Auditable reasoning</div>
-            <div class="tl-desc">Every agent logs its decision trace. Country MDs can inspect exactly <em>why</em> a risk score is 72 — satisfying Responsible AI requirements.</div>
-          </div>
+        <div class="math-row">
+          <span class="math-label">Distribution OOS: then → now</span>
+          <span class="math-val red">7.0% → 9.2% = +2.2pp</span>
+          <span class="math-src">Daily feed</span>
         </div>
-        <div class="tl-item">
-          <div class="tl-num">3</div>
-          <div class="tl-content">
-            <div class="tl-title">Handles conflicting models gracefully</div>
-            <div class="tl-desc">MMM and pricing tools feed into the Ingestion Agent as additional signals — not replacements. Conflicts are surfaced, not hidden.</div>
-          </div>
+        <div class="math-row">
+          <span class="math-label">Lead-lag beta (52-week history)</span>
+          <span class="math-val">−1.8% volume per 1pp OOS (r=0.85)</span>
+          <span class="math-src">Historical</span>
+        </div>
+        <div class="math-row">
+          <span class="math-label">Estimated POS adjustment</span>
+          <span class="math-val red">−2.2 × 1.8% = −3.96%</span>
+          <span class="math-src">Derived</span>
+        </div>
+        <div class="math-row" style="border-bottom:none;">
+          <span class="math-label">Normalised POS today</span>
+          <span class="math-val green">~8,932 cases/wk ± 370 [HIGH confidence]</span>
+          <span class="math-src">Agent output</span>
         </div>
       </div>
     </div>
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">Technical stack</h3>
-      <div class="card" style="margin-bottom:.7rem;">
-        <div class="card-label">Runtime</div>
-        <div class="card-title">Node.js + Express + Socket.IO</div>
-        <div class="card-body">Real-time streaming of agent reasoning to the dashboard via WebSocket events.</div>
-      </div>
-      <div class="card" style="margin-bottom:.7rem;">
-        <div class="card-label">Visualisation</div>
-        <div class="card-title">Heineken-branded web dashboard</div>
-        <div class="card-body">Risk gauge, live agent log, alert feed, recommendation cards — all update in real-time during a pipeline run.</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Production path</div>
-        <div class="card-title">Azure + Cosmos DB + Databricks</div>
-        <div class="card-body">Swap mock data with real POS feeds via Azure Data Factory. Model training in Databricks. State in Cosmos DB.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 6 — DATA SOURCES
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s6">
-  <div class="slide-tag animate animate-1">Data Foundation</div>
-  <h2 class="slide-title animate animate-1">6 Signal Streams — Unified by the Ingestion Agent</h2>
-
-  <div class="two-col animate animate-2">
-    <div>
-      <table class="ds-table">
-        <thead>
-          <tr><th>Source</th><th>Freshness</th><th>Quality</th><th>Signal Weight</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>📦 POS (Sell-out)</td><td>W-1 · 7-day lag</td><td><span class="badge high">HIGH</span></td><td><strong>30%</strong></td></tr>
-          <tr><td>📺 ATL (Brand)</td><td>W-0 · Weekly</td><td><span class="badge high">HIGH</span></td><td><strong>15%</strong></td></tr>
-          <tr><td>🎪 BTL (Activation)</td><td>Sporadic · 21d lag</td><td><span class="badge med">MEDIUM</span></td><td><strong>10%</strong></td></tr>
-          <tr><td>💰 Pricing &amp; Promo</td><td>W-1 · Weekly</td><td><span class="badge high">HIGH</span></td><td><strong>20%</strong></td></tr>
-          <tr><td>🚛 Distribution</td><td>Daily</td><td><span class="badge high">HIGH</span></td><td><strong>15%</strong></td></tr>
-          <tr><td>🌍 Macro</td><td>Monthly</td><td><span class="badge low">LOW</span></td><td><strong>10%</strong></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div>
-      <div class="card gold-border" style="margin-bottom:1rem;">
-        <div class="card-label">Key insight on data quality</div>
-        <div class="card-title">Imperfect data ≠ no intelligence</div>
-        <div class="card-body">
-          Each source is weighted by its freshness and quality score. Low-quality signals (BTL, Macro) contribute less to the composite risk score, and <strong>uncertainty is made transparent</strong> — not hidden behind a clean number.<br/><br/>
-          This is what makes Minority Report trustworthy in a world where data is "uneven across sources" — the system knows what it doesn't know.
+      <div class="card bb" style="margin-bottom:12px;">
+        <div class="clabel">5 Lead-Lag Relationships Encoded</div>
+        <div style="font-size:12px;color:var(--t2);display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+          <div><strong>Distribution → POS</strong>: lag 3.5d · r=0.85 · β=−1.8</div>
+          <div><strong>ATL (GRP) → POS</strong>: lag 2.5wk · r=0.72 · β=+0.045</div>
+          <div><strong>Pricing → POS</strong>: lag 0.8wk · r=−0.68 · β=−1.4</div>
+          <div><strong>BTL → POS</strong>: lag 1.2wk · r=0.58 · β=+0.8</div>
+          <div><strong>Macro → POS</strong>: lag 4.0wk · r=0.41 · β=+0.6</div>
         </div>
       </div>
-      <div class="card green-border">
-        <div class="card-label">BTL data improvement path</div>
-        <div class="card-title">From sporadic to structured in 4 weeks</div>
-        <div class="card-body">Piloting a simple mobile reporting form for field promoters cuts BTL lag from 21 days to 48 hours. This alone upgrades quality from MEDIUM → HIGH and reduces model uncertainty by ~12%.</div>
+      <div class="card gb">
+        <div class="clabel">Confidence levels</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:4px;">
+          <strong>HIGH</strong> (r ≥ 0.80): Distribution → POS<br/>
+          <strong>MEDIUM</strong> (r ≥ 0.60): ATL, Pricing<br/>
+          <strong>LOW</strong> (r &lt; 0.60): BTL proxy, Macro extrapolation<br/>
+          <br/>BTL at 21 days stale → estimated via ATL direction (LOW).
+          The agent recommends a mobile reporting form to cut the lag to 48h.
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="three-col animate animate-3" style="margin-top:1.2rem;">
-    <div class="card" style="text-align:center;">
-      <div style="font-size:2rem;margin-bottom:.3rem;">⚡</div>
-      <div class="card-label">Fastest signal</div>
-      <div class="card-title">Distribution · Daily</div>
-      <div class="card-body">Out-of-stock events detected within 24 hours — triggering alerts 6 days before POS data would show the impact.</div>
+  <div class="card ob a a3">
+    <div class="clabel">Why this matters</div>
+    <div class="cbody">Without normalisation, the risk score is a mix of today's distribution data (good) + 7-day-old POS + 21-day-old BTL. The pipeline would fire an alert based on a signal that is, on average, 2 weeks behind. <strong>This agent is the difference between detecting a problem today vs. after it has already cost you cases.</strong></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 5 — CONSTRAINT 2: MODEL CONFLICTS
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s5">
+  <div class="stag a a1">Constraint 2 — Conflicting tools</div>
+  <h2 class="stitle sm a a1">Model Conflict Agent: 3 tools, 3 contradictions — here's what to trust</h2>
+
+  <div class="a a2">
+    <div class="conflict-card sev-high">
+      <div class="conflict-head">
+        <span class="cf-id">CONFLICT-1</span>
+        <span class="cf-dim">Price Elasticity Magnitude</span>
+        <span class="badge b-red">HIGH · 29% divergence</span>
+      </div>
+      <div class="conflict-body">
+        <div><div class="cf-tool">MMM says</div><div class="cf-val">Elasticity = −1.4 (1% price rise = 1.4% volume loss)</div></div>
+        <div><div class="cf-tool">Pricing Tool says</div><div class="cf-val conflict">Elasticity = −1.8 (1% price rise = 1.8% volume loss)</div></div>
+        <div class="cf-resolution"><strong>Resolution:</strong> Use Pricing Tool (−1.8) for 12-week tactical decisions — it runs at weekly granularity with current pricing data. MMM's −1.4 reflects longer-run consumer adaptation. Both are correct for different time horizons. <strong>Trust winner: Pricing Tool</strong></div>
+      </div>
     </div>
-    <div class="card" style="text-align:center;">
-      <div style="font-size:2rem;margin-bottom:.3rem;">🎯</div>
-      <div class="card-label">Highest weight</div>
-      <div class="card-title">POS · 30%</div>
-      <div class="card-body">Actual sell-out velocity at retailer level is the single strongest predictor of 12-week decline. Weekly with 7-day lag.</div>
+    <div class="conflict-card sev-high">
+      <div class="conflict-head">
+        <span class="cf-id">CONFLICT-2</span>
+        <span class="cf-dim">Distribution Contribution</span>
+        <span class="badge b-red">HIGH · measures different things</span>
+      </div>
+      <div class="conflict-body">
+        <div><div class="cf-tool">MMM says (historical)</div><div class="cf-val">Distribution contributing +12% to volume (YTD channel expansion)</div></div>
+        <div><div class="cf-tool">Distribution Planner says (today)</div><div class="cf-val conflict">OOS rate 9.2% → active drag of −9.2% on volume RIGHT NOW</div></div>
+        <div class="cf-resolution"><strong>Resolution:</strong> Both are correct. MMM captures historical channel gains (positive, YTD). Distribution Planner captures current stock-outs (negative, this week). MMM runs monthly — it cannot see intra-week OOS events. Net real-time effect ≈ +12% − 9.2% = +2.8pp, not +12%. <strong>For this week's action: trust the Distribution Planner.</strong></div>
+      </div>
     </div>
-    <div class="card" style="text-align:center;">
-      <div style="font-size:2rem;margin-bottom:.3rem;">🔮</div>
-      <div class="card-label">Forward-looking signal</div>
-      <div class="card-title">Macro · Seasonal Index</div>
-      <div class="card-body">Summer season index >1.05 reduces risk score — the model accounts for demand tailwinds to avoid false alarms.</div>
+    <div class="conflict-card sev-high">
+      <div class="conflict-head">
+        <span class="cf-id">CONFLICT-3</span>
+        <span class="cf-dim">MMM Forecast Accuracy — 15% gap</span>
+        <span class="badge b-red">HIGH · explained by blind spots</span>
+      </div>
+      <div class="conflict-body">
+        <div><div class="cf-tool">MMM predicted (4 weeks)</div><div class="cf-val">~39,200 cases</div></div>
+        <div><div class="cf-tool">Actual (4 weeks)</div><div class="cf-val conflict">~33,200 cases — −15.2% gap</div></div>
+        <div class="cf-resolution"><strong>Root cause:</strong> 3 MMM blind spots: (1) intra-week OOS not visible at monthly granularity, (2) competitor flash promos with &lt;2-week notice, (3) distribution listing changes within month. <strong>Fix: combine MMM trend with Signal Normalization Agent for week-by-week accuracy.</strong></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 7 — RISK DETECTION ENGINE
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s7">
-  <div class="slide-tag animate animate-1">Risk Engine</div>
-  <h2 class="slide-title animate animate-1">How the Risk Score is Computed</h2>
 
-  <div class="two-col animate animate-2">
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 6 — CONSTRAINT 3: REGION & TEAMS
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s6">
+  <div class="stag a a1">Constraint 3 — Distributed teams</div>
+  <h2 class="stitle sm a a1">Not every market can run every recommendation</h2>
+
+  <p style="font-size:13px;color:var(--t2);margin-bottom:14px;" class="a a2">The system shows data availability, model deployment status, and team capacity for all 6 markets — so recommendations are automatically gated on what the local team actually has deployed.</p>
+
+  <table class="sig-table a a2" style="margin-bottom:16px;">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th>Data Quality</th>
+        <th>MMM</th>
+        <th>Pricing Tool</th>
+        <th>Dist. Planner</th>
+        <th>Data Scientists</th>
+        <th>Backlog</th>
+        <th>Can run full pipeline?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🇳🇱 Netherlands</td>
+        <td><span class="badge b-green">92% · 6 sources</span></td>
+        <td><span class="badge b-green">Live 2025-Q4</span></td>
+        <td><span class="badge b-green">Live 2026-Q1</span></td>
+        <td><span class="badge b-green">Live · Daily</span></td>
+        <td style="font-weight:700">3</td>
+        <td>47</td>
+        <td><span class="badge b-green">✓ YES</span></td>
+      </tr>
+      <tr>
+        <td>🇧🇪 Belgium</td>
+        <td><span class="badge b-yellow">No BTL · Manual pricing</span></td>
+        <td><span class="badge b-red">Stale 2024-Q2</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td style="font-weight:700;color:var(--orange)">1</td>
+        <td style="color:var(--red)">84</td>
+        <td><span class="badge b-yellow">Partial</span></td>
+      </tr>
+      <tr>
+        <td>🇩🇪 Germany</td>
+        <td><span class="badge b-yellow">No BTL · Manual dist</span></td>
+        <td><span class="badge b-green">Live 2025-Q4</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td style="font-weight:700">2</td>
+        <td>62</td>
+        <td><span class="badge b-yellow">MMM only</span></td>
+      </tr>
+      <tr>
+        <td>🇵🇱 Poland</td>
+        <td><span class="badge b-red">POS 30d lag · No pricing</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td style="font-weight:700;color:var(--red)">0</td>
+        <td style="color:var(--red)">118</td>
+        <td><span class="badge b-red">✗ NO</span></td>
+      </tr>
+      <tr>
+        <td>🇪🇸 Spain</td>
+        <td><span class="badge b-green">Good · No dist planner</span></td>
+        <td><span class="badge b-yellow">Live 2025-Q2</span></td>
+        <td><span class="badge b-green">Live 2025-Q4</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td style="font-weight:700">2</td>
+        <td>55</td>
+        <td><span class="badge b-yellow">2/3 models</span></td>
+      </tr>
+      <tr>
+        <td>🇳🇬 Nigeria</td>
+        <td><span class="badge b-red">Very limited · 35% coverage</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td><span class="badge b-red">Not deployed</span></td>
+        <td style="font-weight:700;color:var(--red)">0</td>
+        <td style="color:var(--red)">203</td>
+        <td><span class="badge b-red">✗ NO</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="g3 a a3">
+    <div class="card rb">
+      <div class="cnum red">2</div>
+      <div class="clabel">Markets with 0 data scientists</div>
+      <div class="cbody">Poland and Nigeria cannot self-service any analytics. Any work done there requires central team deployment.</div>
+    </div>
+    <div class="card gb">
+      <div class="cnum">3</div>
+      <div class="clabel">Markets with live MMM</div>
+      <div class="cbody">NL, DE, ES have live Marketing Mix Models. Only NL has all 3 tools deployed simultaneously.</div>
+    </div>
+    <div class="card ob">
+      <div class="cnum" style="color:var(--orange)">372</div>
+      <div class="clabel">Combined backlog items (5 non-NL markets)</div>
+      <div class="cbody">172 items in PL + NG alone. Without playbook transfer from NL, these markets won't have tools this half-year.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 7 — CONSTRAINT 4: TWIN MARKET FINDER
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s7">
+  <div class="stag a a1">Constraint 4 — Budget & cross-market leverage</div>
+  <h2 class="stitle sm a a1">Twin Market Agent: transfer playbooks, not budget</h2>
+
+  <div class="gwide a a2">
     <div>
-      <p style="font-size:.88rem;color:var(--g7);line-height:1.7;margin-bottom:1rem;">
-        The Risk Detection Agent evaluates 5 independent risk dimensions, each scored 0–100,
-        then combines them using a weighted composite formula. A data-quality uncertainty
-        penalty is added when source quality degrades.
+      <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.6;">
+        The agent computes a <strong>weighted similarity score</strong> across 7 normalised market indicators.
+        Markets that score ≥70% similar are "identical twins" — models calibrated for one can be
+        transferred to the other with local recalibration rather than a full build.
       </p>
 
-      <div class="risk-bars">
-        <div class="risk-bar-row">
-          <div class="risk-bar-label">📦 POS / Stock</div>
-          <div class="risk-bar-track"><div class="risk-bar-fill" style="width:72%;background:#f97316;"></div></div>
-          <div class="risk-bar-val" style="color:#f97316;">72</div>
-        </div>
-        <div class="risk-bar-row">
-          <div class="risk-bar-label">🚛 Distribution</div>
-          <div class="risk-bar-track"><div class="risk-bar-fill" style="width:68%;background:#f97316;"></div></div>
-          <div class="risk-bar-val" style="color:#f97316;">68</div>
-        </div>
-        <div class="risk-bar-row">
-          <div class="risk-bar-label">💰 Pricing</div>
-          <div class="risk-bar-track"><div class="risk-bar-fill" style="width:62%;background:#eab308;"></div></div>
-          <div class="risk-bar-val" style="color:#eab308;">62</div>
-        </div>
-        <div class="risk-bar-row">
-          <div class="risk-bar-label">📺 Brand</div>
-          <div class="risk-bar-track"><div class="risk-bar-fill" style="width:55%;background:#eab308;"></div></div>
-          <div class="risk-bar-val" style="color:#eab308;">55</div>
-        </div>
-        <div class="risk-bar-row">
-          <div class="risk-bar-label">🌍 Macro</div>
-          <div class="risk-bar-track"><div class="risk-bar-fill" style="width:38%;background:#22c55e;"></div></div>
-          <div class="risk-bar-val" style="color:#22c55e;">38</div>
+      <div class="card bb" style="margin-bottom:12px;">
+        <div class="clabel">7-indicator similarity algorithm</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;">
+          <div>Beer consumption/capita <span style="color:var(--t4)">25%</span></div>
+          <div>GDP / capita <span style="color:var(--t4)">20%</span></div>
+          <div>Modern Trade share <span style="color:var(--t4)">20%</span></div>
+          <div>Premium segment share <span style="color:var(--t4)">15%</span></div>
+          <div>Heineken market share <span style="color:var(--t4)">10%</span></div>
+          <div>CPI <span style="color:var(--t4)">5%</span></div>
+          <div>Unemployment <span style="color:var(--t4)">5%</span></div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:1rem;background:var(--g9);text-align:center;padding:1.2rem;">
-        <div style="font-size:.75rem;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:.3rem;">COMPOSITE RISK SCORE</div>
-        <div style="font-size:3.5rem;font-weight:900;color:#f97316;line-height:1;">67<span style="font-size:1.5rem;color:rgba(255,255,255,.3)">/100</span></div>
-        <div style="font-size:.85rem;font-weight:800;color:#f97316;margin-top:.3rem;">HIGH SEVERITY</div>
-        <div style="font-size:.73rem;color:rgba(255,255,255,.4);margin-top:.3rem;">Sample illustration — actual scores generated live by the AI agent</div>
+      <div style="background:var(--w);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Netherlands — similarity to all other markets</div>
+        <div class="twin-row">
+          <div class="twin-flag">🇧🇪</div>
+          <div class="twin-name">Belgium</div>
+          <div class="twin-bar-bg"><div class="twin-bar-fill" style="width:84%;background:#16a34a"></div></div>
+          <div class="twin-pct" style="color:#16a34a">84%</div>
+          <div class="twin-note">Very High · 3 playbooks transferable</div>
+        </div>
+        <div class="twin-row">
+          <div class="twin-flag">🇩🇪</div>
+          <div class="twin-name">Germany</div>
+          <div class="twin-bar-bg"><div class="twin-bar-fill" style="width:72%;background:#ca8a04"></div></div>
+          <div class="twin-pct" style="color:#ca8a04">72%</div>
+          <div class="twin-note">High · 2 playbooks transferable</div>
+        </div>
+        <div class="twin-row">
+          <div class="twin-flag">🇪🇸</div>
+          <div class="twin-name">Spain</div>
+          <div class="twin-bar-bg"><div class="twin-bar-fill" style="width:58%;background:#ca8a04"></div></div>
+          <div class="twin-pct" style="color:#ca8a04">58%</div>
+          <div class="twin-note">Moderate · 1 playbook</div>
+        </div>
+        <div class="twin-row">
+          <div class="twin-flag">🇵🇱</div>
+          <div class="twin-name">Poland</div>
+          <div class="twin-bar-bg"><div class="twin-bar-fill" style="width:39%;background:#ea580c"></div></div>
+          <div class="twin-pct" style="color:#ea580c">39%</div>
+          <div class="twin-note">Low · different GDP, CPI</div>
+        </div>
+        <div class="twin-row" style="border-bottom:none">
+          <div class="twin-flag">🇳🇬</div>
+          <div class="twin-name">Nigeria</div>
+          <div class="twin-bar-bg"><div class="twin-bar-fill" style="width:14%;background:#9ca3af"></div></div>
+          <div class="twin-pct" style="color:#9ca3af">14%</div>
+          <div class="twin-note">Very Low · separate strategy needed</div>
+        </div>
       </div>
     </div>
+
     <div>
-      <div class="card" style="margin-bottom:1rem;">
-        <div class="card-label">Composite formula</div>
-        <div class="card-title">Weighted sum + quality penalty</div>
-        <div class="card-body">
-          <code style="background:var(--g1);padding:.5rem .8rem;border-radius:6px;display:block;font-size:.78rem;margin:.5rem 0;line-height:1.8;">
-            Score = POS(0.30) + Dist(0.25) + Price(0.22)<br/>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Brand(0.13) + Macro(0.10)<br/>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (1 − dataQuality) × 8
-          </code>
-          Each dimension is individually interpretable, making the score auditable for Responsible AI compliance.
+      <div class="card gb" style="margin-bottom:12px;">
+        <div class="clabel">NL → Belgium: 3 transferable playbooks</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:6px;display:flex;flex-direction:column;gap:8px;">
+          <div><strong>1. MMM transfer</strong><br/>Belgium's MMM is 3 quarters stale. NL's live model can be recalibrated for BE in 4–6 weeks.<br/><span style="color:var(--g);font-weight:600;">Saving: €35–55K + 10 weeks vs. rebuild</span></div>
+          <div><strong>2. Pricing Tool deployment</strong><br/>Map Belgian retailer price data to NL schema.<br/><span style="color:var(--g);font-weight:600;">Saving: €20–30K + 6 weeks</span></div>
+          <div><strong>3. Distribution pipeline</strong><br/>Replicate NL daily OOS feed connector.<br/><span style="color:var(--g);font-weight:600;">Saving: 4 weeks of data engineering</span></div>
         </div>
       </div>
-
-      <div class="card gold-border" style="margin-bottom:1rem;">
-        <div class="card-label">Severity thresholds</div>
-        <div class="card-title">4-tier escalation model</div>
-        <div class="card-body">
-          <div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.3rem;">
-            <div style="display:flex;gap:.7rem;align-items:center;font-size:.8rem;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
-              <strong>CRITICAL (75–100):</strong> All-hands escalation, push alerts
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:center;font-size:.8rem;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block;"></span>
-              <strong>HIGH (55–74):</strong> MD + Commercial + Supply Chain
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:center;font-size:.8rem;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#eab308;display:inline-block;"></span>
-              <strong>MEDIUM (35–54):</strong> Commercial Director + Field Sales
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:center;font-size:.8rem;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
-              <strong>LOW (0–34):</strong> Field Sales Manager only
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card green-border">
-        <div class="card-label">Model evolution path</div>
-        <div class="card-title">Heuristic → ML → LLM-augmented</div>
-        <div class="card-body">Pilot uses a calibrated heuristic model (fast to deploy, fully explainable). As outcome data accumulates over 3–4 cycles, a gradient-boosted model replaces it. LLM augmentation for recommendation narrative quality comes at scale.</div>
+      <div class="card gold-bg">
+        <div class="clabel" style="color:var(--gold-dark)">Budget recommendation</div>
+        <div class="cnum gold">€100K</div>
+        <div class="cbody" style="color:var(--gold-dark)">estimated saving vs. build-from-scratch across NL→BE playbook transfer alone. NL→DE adds another €60–80K.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 8 — ALERTS & RECOMMENDATIONS
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s8">
-  <div class="slide-tag animate animate-1">Output</div>
-  <h2 class="slide-title animate animate-1">From Risk Signal to Action in Minutes</h2>
 
-  <div class="two-col animate animate-2">
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 8 — CONSTRAINT 5: SIMPLE MATH ROI (RECOMMENDATION FORMAT)
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s8">
+  <div class="stag a a1">Constraint 5 — Country MD wants to verify the numbers</div>
+  <h2 class="stitle sm a a1">Every recommendation: problem / the maths / ROI</h2>
+
+  <p style="font-size:13px;color:var(--t2);margin-bottom:14px;" class="a a2">No black boxes. No model scores. Every recommendation shows the arithmetic a Country MD can challenge with a calculator. Here is REC-001 in full:</p>
+
+  <div class="gwide a a2">
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">🔔 Sample Alerts Generated</h3>
-
-      <div class="alert-card critical">
-        <div class="alert-sev">● CRITICAL · SELL-OUT RISK</div>
-        <div class="alert-head">High sell-out volume risk detected in Netherlands Modern Trade</div>
-        <div class="alert-meta">👥 Country MD, Commercial Director, Supply Chain Director, Global Hub · 📢 Push + Email + Teams</div>
+      <div class="card rb" style="margin-bottom:10px;">
+        <div class="clabel">PROBLEM</div>
+        <div class="cbody">Albert Heijn will run out of Heineken in 6 days. Replenishment lead time is 4 days. Decision window: <strong>2 days.</strong></div>
       </div>
 
-      <div class="alert-card high">
-        <div class="alert-sev">● HIGH · STOCK COVERAGE</div>
-        <div class="alert-head">Low stock coverage at 2 key retailers — OOS risk within 2 weeks</div>
-        <div class="alert-meta">👥 Supply Chain Director, Field Sales Manager · 📢 Email + Teams</div>
-      </div>
-
-      <div class="alert-card medium">
-        <div class="alert-sev">● MEDIUM · PRICE COMPETITIVENESS</div>
-        <div class="alert-head">Heineken priced 6% above competitive benchmark on shelf</div>
-        <div class="alert-meta">👥 Commercial Director, Revenue Management Hub · 📢 Email</div>
+      <div class="card" style="margin-bottom:10px;">
+        <div class="clabel">THE MATHS</div>
+        <div class="math-box" style="background:var(--w);">
+          <div class="math-row">
+            <span class="math-label">Normalised sell-out rate</span>
+            <span class="math-val">1,276 cases/day</span>
+            <span class="math-src">Signal Normalization Agent</span>
+          </div>
+          <div class="math-row">
+            <span class="math-label">Stock at Albert Heijn</span>
+            <span class="math-val">~7,760 cases</span>
+            <span class="math-src">Distribution Planner (today)</span>
+          </div>
+          <div class="math-row">
+            <span class="math-label">Days of stock</span>
+            <span class="math-val">7,760 ÷ 1,276 = 6.1 days</span>
+            <span class="math-src">Derived</span>
+          </div>
+          <div class="math-row">
+            <span class="math-label">Delivery lead time</span>
+            <span class="math-val">4 days</span>
+            <span class="math-src">Logistics SLA</span>
+          </div>
+          <div class="math-row" style="border-bottom:none">
+            <span class="math-label">Decision window</span>
+            <span class="math-val red">6.1 − 4 = 2.1 days</span>
+            <span class="math-src">Derived</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">💡 Sample Recommendations Generated</h3>
-
-      <div class="rec-card" style="margin-bottom:.8rem;">
-        <div class="rec-num">#1 Priority</div>
-        <div class="rec-cat">Supply Chain</div>
-        <div class="rec-title">Accelerate replenishment to bi-weekly at top 3 retailers</div>
-        <div class="rec-roi">📈 +5% volume recovery · €140K ROI / quarter</div>
-        <div class="rec-effort eff-low">LOW effort</div>
+      <div class="dn-box" style="margin-bottom:10px;">
+        <div class="dn-label">Do-nothing cost</div>
+        <div class="dn-formula">~2 days × 1,276 cases/day<br/>× €3.20 revenue/case<br/>= <strong>€8,167 lost revenue</strong></div>
       </div>
-
-      <div class="rec-card" style="margin-bottom:.8rem;">
-        <div class="rec-num">#2 Priority</div>
-        <div class="rec-cat">Pricing &amp; Promotions</div>
-        <div class="rec-title">Activate 4-pack promo at −15% at Albert Heijn &amp; Jumbo</div>
-        <div class="rec-roi">📈 +8% volume recovery · €110K ROI / quarter</div>
-        <div class="rec-effort eff-med">MEDIUM effort</div>
+      <div class="card gb" style="margin-bottom:10px;">
+        <div class="clabel">ACTION</div>
+        <div class="cbody">Schedule extra delivery to Albert Heijn within 2 days. Switch from weekly to twice-weekly replenishment for 4 weeks.</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--t3);">Owner: Supply Chain Director · Deadline: 2 days</div>
       </div>
+      <div class="roi-box">
+        <div class="roi-num">9x</div>
+        <div class="roi-label">13-week ROI</div>
+        <div class="roi-formula">€8,167 protected ÷ €4,200 extra delivery<br/>= 1.9x immediate<br/>× 13 weeks sustained = ~9x quarterly</div>
+      </div>
+    </div>
+  </div>
 
-      <div class="rec-card">
-        <div class="rec-num">#5 Strategic</div>
-        <div class="rec-cat">Strategic</div>
-        <div class="rec-title">Proceed with Option A pilot — NL + NG within 8 weeks</div>
-        <div class="rec-roi">📈 +7% vs no-action baseline · €450K across both markets</div>
-        <div class="rec-effort eff-high">HIGH effort</div>
+  <div class="card bb a a3" style="margin-top:10px;">
+    <div class="clabel">Why this format matters</div>
+    <div class="cbody">The Country MD does not need to trust the model. They see: sell-out rate, stock on hand, delivery lead time, and the arithmetic to derive the decision window. They can call the supply chain director and say "Albert Heijn has 6 days of stock. Order placed?" <strong>Every number in this card can be verified by the MD in under 5 minutes.</strong></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 9 — WHAT THE DASHBOARD LOOKS LIKE
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s9">
+  <div class="stag a a1">The Product</div>
+  <h2 class="stitle sm a a1">6-section dashboard — one pipeline run, everything in one place</h2>
+
+  <div class="g3 a a2" style="margin-bottom:14px;">
+    <div class="card bb">
+      <div class="pipe-icon">🕵️</div>
+      <div class="ctitle">1. Command Centre</div>
+      <div class="cbody">Risk gauge (0–100) · Top 3 risk drivers with weighted bars · KPI strip: signal quality, conflict count, top twin, action count</div>
+    </div>
+    <div class="card bb">
+      <div class="pipe-icon">📊</div>
+      <div class="ctitle">2. Signal Intelligence</div>
+      <div class="cbody">Table: raw value → staleness → lead indicator used → normalised estimate → change % → confidence. Lead-lag relationship cards below.</div>
+    </div>
+    <div class="card bb">
+      <div class="pipe-icon">⚔️</div>
+      <div class="ctitle">3. Model Conflicts</div>
+      <div class="cbody">Side-by-side: MMM vs Pricing Tool vs Distribution Planner. Each conflict card shows divergence, practical impact, and which tool to trust.</div>
+    </div>
+    <div class="card gb">
+      <div class="pipe-icon">🌍</div>
+      <div class="ctitle">4. Region &amp; Teams</div>
+      <div class="cbody">Market cards: data availability dots (green/amber/red), model deployment dots, team headcount, backlog. All 6 markets at a glance.</div>
+    </div>
+    <div class="card gb">
+      <div class="pipe-icon">👯</div>
+      <div class="ctitle">5. Twin Markets</div>
+      <div class="cbody">Ranked similarity table: each market vs. source market, similarity bar, model gap, transferable playbooks with saving estimate.</div>
+    </div>
+    <div class="card ob">
+      <div class="pipe-icon">📐</div>
+      <div class="ctitle">6. Recommendations</div>
+      <div class="cbody">Full maths format: problem / arithmetic / do-nothing cost / action / cost / ROI. Owner and deadline chips. Confidence note where models disagree.</div>
+    </div>
+  </div>
+
+  <div class="g2 a a3">
+    <div class="card">
+      <div class="clabel">How to run it</div>
+      <div class="cbody" style="font-size:12px;">1. Select market from dropdown (6 available)<br/>2. Click "Run Pipeline"<br/>3. Pipeline bar advances through 6 phases in real time<br/>4. Agent Reasoning Log (left sidebar) streams every calculation step<br/>5. All 6 sections populate automatically</div>
+    </div>
+    <div class="card">
+      <div class="clabel">Technical stack</div>
+      <div class="cbody" style="font-size:12px;">Node.js · Express · Socket.IO (real-time streaming)<br/>Vanilla JS + Chart-ready frontend (no framework)<br/>Vercel deployment via <code>vercel.json</code><br/>Repository: github.com/prasad-mohit/Heineken<br/>Theme: Light executive (white/gray, Heineken green)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 10 — LIVE DEMO: NETHERLANDS PILOT
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s10">
+  <div class="stag a a1">Live Demo Output — Netherlands</div>
+  <h2 class="stitle sm a a1">What the pipeline produces when you run it</h2>
+
+  <div class="g2 a a2">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Signal Normalization Output</div>
+      <table class="sig-table" style="margin-bottom:14px;">
+        <thead>
+          <tr><th>Signal</th><th>Raw</th><th>Staleness</th><th>Normalised</th><th>Confidence</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>POS</td><td>9,300 cases/wk</td><td><span class="badge b-yellow">7 days</span></td><td><strong>~8,932 cases/wk</strong></td><td><span class="badge b-green">HIGH</span></td></tr>
+          <tr><td>ATL</td><td>312 GRP</td><td><span class="badge b-green">1 day</span></td><td>312 GRP (unchanged)</td><td><span class="badge b-green">HIGH</span></td></tr>
+          <tr><td>BTL</td><td>38 activations</td><td><span class="badge b-red">21 days</span></td><td>~40 activations (est.)</td><td><span class="badge b-red">LOW</span></td></tr>
+          <tr><td>Distribution</td><td>9.2% OOS</td><td><span class="badge b-green">1 day</span></td><td>9.2% OOS (lead indicator)</td><td><span class="badge b-green">HIGH</span></td></tr>
+          <tr><td>Macro</td><td>CPI 3.1%</td><td><span class="badge b-red">31 days</span></td><td>~3.2% (trend)</td><td><span class="badge b-red">LOW</span></td></tr>
+        </tbody>
+      </table>
+
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Risk Score (normalised signals)</div>
+      <div style="display:flex;align-items:center;gap:14px;background:var(--red-bg);border:1px solid #FECACA;border-radius:8px;padding:14px;">
+        <div style="font-size:48px;font-weight:900;color:var(--red)">55</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--red)">HIGH</div>
+          <div style="font-size:11.5px;color:#7F1D1D;margin-top:2px;">Top drivers: Distribution (OOS 9.2%) · Pricing (8% above optimal) · POS volume (−4% vs baseline)</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Recommendations Generated</div>
+      <div class="card rb" style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="clabel">REC-001 · Supply Chain</div>
+          <span class="badge b-red">URGENT</span>
+        </div>
+        <div class="cbody">Albert Heijn OOS in ~6 days. Act in 2 days. <strong>ROI: 9x (13 weeks)</strong>. Owner: Supply Chain Director.</div>
+      </div>
+      <div class="card ob" style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="clabel">REC-002 · Revenue Management</div>
+          <span class="badge b-orange">HIGH</span>
+        </div>
+        <div class="cbody">Price €2.18 vs €2.05 optimal. Recovering 1,026 cases/wk via 4-pack promo. <strong>ROI: 6.2x annual</strong>. Owner: Commercial Director.</div>
+      </div>
+      <div class="card gb">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="clabel">REC-003 · Efficiency</div>
+          <span class="badge b-green">MEDIUM</span>
+        </div>
+        <div class="cbody">Transfer 3 playbooks to Belgium (84% similar). Save ~€100K vs build-from-scratch. Owner: Regional Analytics Lead.</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 9 — LIVE DEMO
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s9" style="background:var(--g9);">
-  <div class="slide-tag animate animate-1" style="color:var(--gold);">POC Demo</div>
-  <h2 class="slide-title animate animate-1 white">See it working — right now</h2>
 
-  <div class="two-col animate animate-2">
-    <div>
-      <div class="card dark" style="border:1px solid rgba(255,255,255,.1);margin-bottom:1rem;">
-        <div class="card-label w">WHAT THE DEMO SHOWS</div>
-        <div class="card-title w">Full agent pipeline — live</div>
-        <div class="card-body w" style="margin-top:.5rem;">
-          <div style="display:flex;flex-direction:column;gap:.6rem;">
-            <div style="display:flex;gap:.7rem;align-items:flex-start;font-size:.82rem;color:rgba(255,255,255,.8);">
-              <span style="color:var(--gold);font-weight:800;">01</span>
-              <span>Select a market (🇳🇱 Netherlands or 🇳🇬 Nigeria) and click <strong style="color:var(--gold);">Run Agent Pipeline</strong></span>
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:flex-start;font-size:.82rem;color:rgba(255,255,255,.8);">
-              <span style="color:var(--gold);font-weight:800;">02</span>
-              <span>Watch 4 agents activate in sequence — each reasoning step streams to the <strong style="color:#4ade80;">Live Log panel</strong></span>
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:flex-start;font-size:.82rem;color:rgba(255,255,255,.8);">
-              <span style="color:var(--gold);font-weight:800;">03</span>
-              <span>Risk Gauge updates live with the composite score and severity colour</span>
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:flex-start;font-size:.82rem;color:rgba(255,255,255,.8);">
-              <span style="color:var(--gold);font-weight:800;">04</span>
-              <span>Severity-graded alerts appear with stakeholder routing and channel</span>
-            </div>
-            <div style="display:flex;gap:.7rem;align-items:flex-start;font-size:.82rem;color:rgba(255,255,255,.8);">
-              <span style="color:var(--gold);font-weight:800;">05</span>
-              <span>Ranked recommendations populate with ROI, effort, owner, and KPI</span>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 11 — HOW THE AGENT LOG SHOWS REASONING
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s11">
+  <div class="stag a a1">Transparency &amp; Explainability</div>
+  <h2 class="stitle sm a a1">Every calculation is visible in the reasoning log</h2>
 
-      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1rem;font-family:monospace;font-size:.75rem;color:#4ade80;">
-        <div style="color:rgba(255,255,255,.3);margin-bottom:.4rem;"># Start the demo server</div>
-        <div>cd heniken</div>
-        <div style="color:#93c5fd;">npm start</div>
-        <div style="color:rgba(255,255,255,.3);margin-top:.6rem;"># Open in browser</div>
-        <div>http://localhost:3000</div>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:14px;" class="a a2">Every number in every recommendation traces back to a log entry. No black boxes — a Country MD's analyst can audit the full chain from raw signal to final action in the sidebar log.</p>
+
+  <div class="card" style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:11.5px;color:var(--t2);line-height:1.8;" class="a a2">
+    <div style="color:var(--blue);font-weight:700;">▶ Signal Normalization Agent activated — market: Netherlands</div>
+    <div style="padding-left:16px;">Mission: align 6 signal streams to a single effective time-point</div>
+    <div style="padding-left:16px;color:var(--orange);">⚠ POS: 7 days stale — applying distribution lead-lag correction</div>
+    <div style="padding-left:32px;">Distribution OOS changed 7.0% → 9.2% (Δ +2.2pp)</div>
+    <div style="padding-left:32px;">Lead-lag: 3.5d lag, r=0.85, β=−1.8 (1pp OOS = −1.8% volume)</div>
+    <div style="padding-left:32px;">POS raw: 9,300 cases/wk → Normalised: 8,932 ±370 cases/wk</div>
+    <div style="padding-left:32px;color:var(--g);font-weight:700;">Change: −4.0% — confidence: HIGH</div>
+    <div style="padding-left:16px;color:var(--g);">✓ Distribution: FRESH (1 day) — primary lead indicator</div>
+    <div style="padding-left:16px;color:var(--orange);">⚠ BTL: 21 days stale — using ATL direction as proxy [LOW confidence]</div>
+    <div style="color:var(--g);font-weight:700;margin-top:4px;">✅ Normalisation complete. 3/6 signals updated. HIGH×3 · MEDIUM×0 · LOW×2</div>
+    <br/>
+    <div style="color:var(--orange);font-weight:700;">▶ Model Conflict Agent — reconciling 3 tools</div>
+    <div style="padding-left:16px;color:var(--red);">⚠ CONFLICT-1 (29% divergence): Elasticity MMM −1.4 vs Pricing Tool −1.8</div>
+    <div style="padding-left:16px;color:var(--red);">⚠ CONFLICT-2 (CRITICAL): MMM dist. +12% YTD vs live OOS −9.2% today</div>
+    <div style="padding-left:16px;color:var(--red);">⚠ CONFLICT-3: MMM forecast 15.2% below actuals — 3 blind spots identified</div>
+    <br/>
+    <div style="color:var(--g);font-weight:700;">▶ Recommendation Agent — REC-001</div>
+    <div style="padding-left:16px;">Albert Heijn stock: 6.1 days · lead time: 4 days · window: 2 days</div>
+    <div style="padding-left:16px;">Do-nothing: 2d × 1,276 cases × €3.20 = €8,167 · Action cost: €4,200 · ROI: 9x</div>
+    <div style="padding-left:16px;color:var(--g);font-weight:700;">✅ 3 recommendations generated — all evidence backed, all verifiable</div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 12 — ROLLOUT PLAN
+════════════════════════════════════════════════════════════════ -->
+<div class="slide cs tight" id="s12">
+  <div class="stag a a1">Rollout</div>
+  <h2 class="stitle sm a a1">From Netherlands pilot to EMEA — in 3 phases</h2>
+
+  <div class="tl a a2" style="margin-bottom:14px;">
+    <div class="tl-item">
+      <div class="tl-num">1</div>
+      <div>
+        <div class="tl-title">Phase 1 (Now — 4 weeks): Netherlands full pilot</div>
+        <div class="tl-desc">All 6 agents live. Dashboard deployed. Country MD and Commercial Director running weekly pipeline reviews. Capture feedback on recommendation format and alert routing.</div>
       </div>
     </div>
+    <div class="tl-item">
+      <div class="tl-num">2</div>
+      <div>
+        <div class="tl-title">Phase 2 (Weeks 5–12): Belgium via playbook transfer</div>
+        <div class="tl-desc">Transfer MMM, Pricing Tool, and Distribution pipeline from NL to BE (84% similar). Recalibrate — not rebuild. Belgium live in 6 weeks at ~€100K below standard build cost. Validate twin market algorithm with real outcome data.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-num">3</div>
+      <div>
+        <div class="tl-title">Phase 3 (H2 2026): Germany and Spain</div>
+        <div class="tl-desc">Germany: NL MMM transfer + build Pricing Tool (not in NL schema — 2 weeks). Spain: Pricing Tool already live; add Distribution Planner. Poland and Nigeria: data infrastructure investment required first — out of H1 scope.</div>
+      </div>
+    </div>
+  </div>
 
-    <div>
-      <div class="card dark" style="border:2px solid var(--gold);margin-bottom:1rem;">
-        <div class="card-label" style="color:var(--gold);">DASHBOARD FEATURES</div>
-        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">⚠️ Risk Gauge (0–100)</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">🤖 4-Agent Pipeline Visualiser</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">🖥 Streaming Agent Reasoning Log</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">📊 Data Source Quality Matrix</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">🔔 Severity-graded Alerts</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">💡 Ranked Recommendations + ROI</span>
-            <span class="badge green">LIVE</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;font-size:.82rem;">
-            <span style="color:rgba(255,255,255,.8);">📈 12-Week Risk Trend Chart</span>
-            <span class="badge green">LIVE</span>
-          </div>
-        </div>
-      </div>
-      <div class="card dark" style="border:1px solid rgba(255,255,255,.1);text-align:center;">
-        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:.3rem;">MARKET COVERAGE</div>
-        <div style="display:flex;gap:1rem;justify-content:center;">
-          <div style="text-align:center;">
-            <div style="font-size:2rem;">🇳🇱</div>
-            <div style="font-size:.8rem;color:rgba(255,255,255,.7);font-weight:700;">Netherlands</div>
-            <div style="font-size:.7rem;color:rgba(255,255,255,.4);">42,000 cases/wk</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:2rem;">🇳🇬</div>
-            <div style="font-size:.8rem;color:rgba(255,255,255,.7);font-weight:700;">Nigeria</div>
-            <div style="font-size:.7rem;color:rgba(255,255,255,.4);">61,000 cases/wk</div>
-          </div>
-        </div>
-      </div>
+  <div class="g4 a a3">
+    <div class="card gb">
+      <div class="cnum">€100K</div>
+      <div class="clabel">Saved — BE playbook transfer vs rebuild</div>
+    </div>
+    <div class="card gb">
+      <div class="cnum">10w</div>
+      <div class="clabel">Faster time-to-insight for Belgium</div>
+    </div>
+    <div class="card ob">
+      <div class="cnum" style="color:var(--orange)">4</div>
+      <div class="clabel">Markets with working pipeline by H2 2026</div>
+    </div>
+    <div class="card rb">
+      <div class="cnum red">2</div>
+      <div class="clabel">Markets (PL, NG) needing data infra first</div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 10 — BUSINESS VALUE
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s10">
-  <div class="slide-tag animate animate-1">Business Case</div>
-  <h2 class="slide-title animate animate-1">The Value It Creates</h2>
 
-  <div class="four-col animate animate-2">
-    <div class="big-stat card">
-      <div class="big-num">6–10%</div>
-      <div class="big-label">predicted volume decline <strong>prevented</strong></div>
-    </div>
-    <div class="big-stat card">
-      <div class="big-num gold">€450K</div>
-      <div class="big-label">est. ROI across 2 pilot markets / quarter</div>
-    </div>
-    <div class="big-stat card">
-      <div class="big-num">6 days</div>
-      <div class="big-label">earlier than POS-based detection</div>
-    </div>
-    <div class="big-stat card">
-      <div class="big-num" style="color:var(--g);">∞</div>
-      <div class="big-label">learning cycles — improves every week</div>
-    </div>
-  </div>
-
-  <div class="two-col animate animate-3" style="margin-top:1.2rem;">
-    <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">Value by stakeholder</h3>
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-num">🇳🇱</div>
-          <div class="tl-content">
-            <div class="tl-title">Country MD</div>
-            <div class="tl-desc">Single dashboard replaces 5 fragmented reports. Get a risk number, not a data dump. ROI transparency before committing budget.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num">📊</div>
-          <div class="tl-content">
-            <div class="tl-title">Commercial Director</div>
-            <div class="tl-desc">Ranked corrective actions with ROI estimates arrive before the weekly commercial review. Decisions backed by AI, not gut.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num">🚛</div>
-          <div class="tl-content">
-            <div class="tl-title">Supply Chain Director</div>
-            <div class="tl-desc">OOS risk flagged 6 days before POS confirms it. Replenishment decisions made proactively, not reactively.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num">🌐</div>
-          <div class="tl-content">
-            <div class="tl-title">Global Revenue Management Hub</div>
-            <div class="tl-desc">Comparable risk scores across markets enable global benchmarking, prioritisation of interventions, and best practice sharing.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div class="value-hero">
-        <div class="vh-num">12 weeks</div>
-        <div class="vh-label">to measurable business impact from today</div>
-      </div>
-      <div class="card" style="margin-bottom:.8rem;">
-        <div class="card-label">Speed advantage</div>
-        <div class="card-title">Early detection = time to act</div>
-        <div class="card-body">Distribution-based signals fire daily. By the time POS data confirms a decline, Minority Report has already alerted the relevant team and generated a ranked action plan — 6 days earlier on average.</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Compound value</div>
-        <div class="card-title">Every cycle makes the model smarter</div>
-        <div class="card-body">Outcome tracking (did the recommended action work?) feeds back into signal weighting. The model's accuracy improves with every 12-week cycle — unlike static dashboards.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 11 — RESPONSIBLE AI
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s11">
-  <div class="slide-tag animate animate-1">Responsible AI</div>
-  <h2 class="slide-title animate animate-1">Built for Trust, Not Just Performance</h2>
-
-  <p class="animate animate-2" style="font-size:.9rem;color:var(--g7);line-height:1.7;margin-bottom:1.5rem;max-width:780px;">
-    Country MDs have explicitly asked for Responsible AI clarity before committing to rollout. Minority Report is designed from the ground up to be explainable, auditable, and human-supervised — not a black box.
-  </p>
-
-  <div class="rai-grid animate animate-3">
-    <div class="rai-card">
-      <div class="rai-icon">🔍</div>
-      <div class="rai-title">Full Explainability</div>
-      <div class="rai-desc">Every risk score shows its component breakdown. The agent reasoning log is stored and auditable. No score without an explanation.</div>
-    </div>
-    <div class="rai-card">
-      <div class="rai-icon">👤</div>
-      <div class="rai-title">Human-in-the-Loop</div>
-      <div class="rai-desc">All recommendations require human review before execution. The system advises — people decide. This is policy, not just a disclaimer.</div>
-    </div>
-    <div class="rai-card">
-      <div class="rai-icon">⚖️</div>
-      <div class="rai-title">Bias Monitoring</div>
-      <div class="rai-desc">Outcome tracking flags when the model systematically over- or under-predicts risk for a market — triggering a model review.</div>
-    </div>
-    <div class="rai-card">
-      <div class="rai-icon">🔒</div>
-      <div class="rai-title">Data Governance</div>
-      <div class="rai-desc">PII-free signal sources. Data lineage tracked per ingestion run. GDPR-compatible by design. Retailer data never leaves the OpCo boundary.</div>
-    </div>
-    <div class="rai-card">
-      <div class="rai-icon">📋</div>
-      <div class="rai-title">Uncertainty Transparency</div>
-      <div class="rai-desc">Low-quality signals inflate the uncertainty band on the risk score. The system shows confidence, not false precision.</div>
-    </div>
-    <div class="rai-card">
-      <div class="rai-icon">🔄</div>
-      <div class="rai-title">Model Drift Detection</div>
-      <div class="rai-desc">Prediction vs actuals tracked weekly. If model accuracy drops below threshold, automated alert fires to the Chapter Lead for review.</div>
-    </div>
-  </div>
-
-  <div class="quote-block animate animate-4" style="margin-top:1.2rem;">
-    "Responsible AI is not a constraint on speed — it's a precondition for adoption. Country MDs will not deploy what they cannot explain to their board."
-    <div class="quote-author">— Design principle, Minority Report v1.0</div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     SLIDE 12 — ROADMAP
-══════════════════════════════════════════════════════════ -->
-<div class="slide content-slide" id="s12">
-  <div class="slide-tag animate animate-1">Delivery Plan</div>
-  <h2 class="slide-title animate animate-1">8-Week Pilot Roadmap</h2>
-
-  <div class="animate animate-2">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
-      <div class="card gold-border">
-        <div class="card-label">Weeks 1–2</div>
-        <div class="card-title" style="font-size:.9rem;">Foundation</div>
-        <div class="card-body" style="font-size:.78rem;">
-          ✔ Connect real POS + Distribution feeds<br/>
-          ✔ Calibrate risk weights to market history<br/>
-          ✔ Deploy to Azure (NL OpCo sandbox)<br/>
-          ✔ Stakeholder kick-off workshop
-        </div>
-      </div>
-      <div class="card gold-border">
-        <div class="card-label">Weeks 3–4</div>
-        <div class="card-title" style="font-size:.9rem;">Validation</div>
-        <div class="card-body" style="font-size:.78rem;">
-          ✔ Backtest risk model on 52 weeks history<br/>
-          ✔ Country MD dashboard onboarding<br/>
-          ✔ Alert routing config + Teams integration<br/>
-          ✔ BTL mobile reporting form live
-        </div>
-      </div>
-      <div class="card gold-border">
-        <div class="card-label">Weeks 5–6</div>
-        <div class="card-title" style="font-size:.9rem;">Pilot Go-Live</div>
-        <div class="card-body" style="font-size:.78rem;">
-          ✔ Live run in Netherlands Modern Trade<br/>
-          ✔ Nigeria market onboarded<br/>
-          ✔ First recommendations actioned<br/>
-          ✔ Feedback loop tracking begins
-        </div>
-      </div>
-      <div class="card gold-border">
-        <div class="card-label">Weeks 7–8</div>
-        <div class="card-title" style="font-size:.9rem;">Impact Review</div>
-        <div class="card-body" style="font-size:.78rem;">
-          ✔ Measure: volume trend vs prediction<br/>
-          ✔ ROI evidence pack for H2 budget ask<br/>
-          ✔ Responsible AI audit report<br/>
-          ✔ Global rollout business case ready
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="two-col animate animate-3">
-    <div>
-      <h3 style="font-size:.9rem;font-weight:700;color:var(--g9);margin-bottom:.8rem;">Success metrics at Week 12</h3>
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-num" style="font-size:.7rem;">KPI</div>
-          <div class="tl-content">
-            <div class="tl-title">Volume decline contained to &lt;2%</div>
-            <div class="tl-desc">vs 6–10% projected without intervention. Primary business outcome.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num" style="font-size:.7rem;">KPI</div>
-          <div class="tl-content">
-            <div class="tl-title">Risk score accuracy ≥ 70%</div>
-            <div class="tl-desc">Measured as % of HIGH/CRITICAL alerts that corresponded to real commercial events within 4 weeks.</div>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-num" style="font-size:.7rem;">KPI</div>
-          <div class="tl-content">
-            <div class="tl-title">Country MD NPS ≥ 7/10</div>
-            <div class="tl-desc">Stakeholder trust score — prerequisite for global rollout sign-off.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div class="card green" style="margin-bottom:1rem;">
-        <div class="card-label w">GLOBAL SCALE VISION</div>
-        <div class="card-title w">From 2 markets to 30+</div>
-        <div class="card-body w">Pilot architecture is market-agnostic. Adding a new OpCo requires connecting its data feeds to the Ingestion Agent — not rebuilding the model. Target: 30 markets by end of 2027.</div>
-      </div>
-      <div class="card">
-        <div class="card-label">H2 2026 horizon</div>
-        <div class="card-title">ML model upgrade + LLM narrative</div>
-        <div class="card-body">Once 3+ outcome cycles complete: swap heuristic risk model for gradient-boosted ML. Integrate LLM for natural-language recommendation summaries in country-specific language.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
+<!-- ════════════════════════════════════════════════════════════════
      SLIDE 13 — FINAL CTA
-══════════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════════════════════ -->
 <div class="slide cta-slide" id="s13">
   <div class="cta-inner">
-    <div class="cta-star animate animate-1">★</div>
-    <h1 class="cta-title animate animate-2">
-      The signals are already there.<br/>
-      We just need to <span>act on them</span>.
-    </h1>
-    <p class="cta-sub animate animate-3">
-      Minority Report is live, running, and demonstrating the full AI agent pipeline today.
-      With 8 weeks of focused execution, we protect volume, earn stakeholder trust, and
-      build the evidence base for global rollout — all within this half-year's budget.
+    <div class="cta-star a a1">★</div>
+    <h2 class="cta-title a a2">Five constraints.<br/><span>Six agents.</span><br/>One working system.</h2>
+    <p class="cta-sub a a3">
+      The AI Early Warning System doesn't replace your commercial judgement —
+      it gives you the data, the arithmetic, and the lead time to act
+      before the decline is visible in weekly actuals.<br/><br/>
+      <strong>Netherlands pilot is live. Open the dashboard and run it.</strong>
     </p>
-    <div class="cta-actions animate animate-4">
-      <button class="cta-btn cta-btn-primary" onclick="window.open('http://localhost:3000','_blank')">🍺 Open Live Dashboard</button>
-      <button class="cta-btn cta-btn-secondary" onclick="currentSlide=0;showSlide(0)">↩ Back to Start</button>
-    </div>
-    <div class="animate animate-5" style="margin-top:2.5rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
-      <div style="text-align:center;color:rgba(255,255,255,.6);font-size:.78rem;">
-        <div style="font-size:1.8rem;color:var(--gold);font-weight:900;">4</div>AI Agents
-      </div>
-      <div style="text-align:center;color:rgba(255,255,255,.6);font-size:.78rem;">
-        <div style="font-size:1.8rem;color:var(--gold);font-weight:900;">6</div>Data Streams
-      </div>
-      <div style="text-align:center;color:rgba(255,255,255,.6);font-size:.78rem;">
-        <div style="font-size:1.8rem;color:var(--gold);font-weight:900;">2</div>Pilot Markets
-      </div>
-      <div style="text-align:center;color:rgba(255,255,255,.6);font-size:.78rem;">
-        <div style="font-size:1.8rem;color:var(--gold);font-weight:900;">12</div>Weeks to Impact
-      </div>
-      <div style="text-align:center;color:rgba(255,255,255,.6);font-size:.78rem;">
-        <div style="font-size:1.8rem;color:var(--gold);font-weight:900;">€450K</div>Pilot ROI
-      </div>
+    <div class="cta-btns a a4">
+      <button class="cta-btn cta-p" onclick="window.location.href='/'">Open Dashboard →</button>
+      <button class="cta-btn cta-s" onclick="window.history.back()">Back to Start</button>
     </div>
   </div>
 </div>
+
 
 </div><!-- /deck -->
 
-<!-- ── Nav Bar ── -->
-<div class="nav-bar">
-  <div class="brand"><span class="star">★</span> HEINEKEN · MINORITY REPORT</div>
-  <div class="nav-dots" id="nav-dots"></div>
-  <div style="display:flex;align-items:center;gap:1rem;">
-    <span class="slide-counter" id="slide-counter">1 / 13</span>
+<!-- ── Nav bar ── -->
+<nav class="nav-bar">
+  <div class="nb-brand"><span class="nb-star">★</span> HEINEKEN · AI Early Warning</div>
+  <div class="nav-dots" id="navDots"></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="slide-ctr" id="slideCtr">1 / 13</span>
     <div class="nav-btns">
-      <button class="nav-btn nav-prev" onclick="prevSlide()">← Prev</button>
-      <button class="nav-btn nav-next" onclick="nextSlide()">Next →</button>
+      <button class="nav-btn nav-prev" id="prevBtn">← Prev</button>
+      <button class="nav-btn nav-next" id="nextBtn">Next →</button>
     </div>
   </div>
-</div>
+</nav>
 
 <script>
-const slides = document.querySelectorAll('.slide');
-const total  = slides.length;
-let currentSlide = 0;
+const TOTAL = 13;
+let cur = 1;
 
 // Build dots
-const dotsEl = document.getElementById('nav-dots');
-slides.forEach((_, i) => {
+const dotsEl = document.getElementById('navDots');
+for (let i = 1; i <= TOTAL; i++) {
   const d = document.createElement('div');
-  d.className = 'dot' + (i === 0 ? ' active' : '');
-  d.onclick = () => showSlide(i);
+  d.className = 'dot' + (i === 1 ? ' active' : '');
+  d.addEventListener('click', () => goTo(i));
   dotsEl.appendChild(d);
-});
-
-function showSlide(n) {
-  const prev = slides[currentSlide];
-  prev.classList.remove('active');
-  prev.classList.add('exit');
-  setTimeout(() => prev.classList.remove('exit'), 600);
-
-  currentSlide = (n + total) % total;
-  slides[currentSlide].classList.add('active');
-
-  document.querySelectorAll('.dot').forEach((d, i) => {
-    d.classList.toggle('active', i === currentSlide);
-  });
-
-  document.getElementById('slide-counter').textContent = `${currentSlide + 1} / ${total}`;
-  document.getElementById('progress').style.width = `${((currentSlide + 1) / total) * 100}%`;
 }
 
-function nextSlide() { showSlide(currentSlide + 1); }
-function prevSlide()  { showSlide(currentSlide - 1); }
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  const prev = document.getElementById('s' + cur);
+  if (prev) { prev.classList.remove('active'); prev.classList.add('exit'); setTimeout(() => prev.classList.remove('exit'), 500); }
+  cur = n;
+  const next = document.getElementById('s' + cur);
+  if (next) next.classList.add('active');
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === cur));
+  document.getElementById('slideCtr').textContent = cur + ' / ' + TOTAL;
+  document.getElementById('progress').style.width = ((cur / TOTAL) * 100) + '%';
+}
 
-// Keyboard navigation
+document.getElementById('nextBtn').addEventListener('click', () => goTo(cur + 1));
+document.getElementById('prevBtn').addEventListener('click', () => goTo(cur - 1));
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); prevSlide(); }
-  if (e.key === 'Home') showSlide(0);
-  if (e.key === 'End')  showSlide(total - 1);
+  if (e.key === 'ArrowRight' || e.key === ' ') goTo(cur + 1);
+  if (e.key === 'ArrowLeft') goTo(cur - 1);
 });
 
-// Touch / swipe
-let touchStartX = 0;
-document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-document.addEventListener('touchend',   e => {
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) > 50) dx < 0 ? nextSlide() : prevSlide();
-});
-
-// Init progress bar
-document.getElementById('progress').style.width = `${(1 / total) * 100}%`;
+// Init progress
+document.getElementById('progress').style.width = (1 / TOTAL * 100) + '%';
 </script>
 </body>
 </html>
