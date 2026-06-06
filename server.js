@@ -4,6 +4,7 @@ const express    = require('express');
 const http       = require('http');
 const { Server } = require('socket.io');
 const path       = require('path');
+const crypto     = require('crypto');
 
 const { runPipeline }      = require('./src/agents/agentOrchestrator');
 const { getRegionOverview, MARKETS } = require('./src/data/sampleData');
@@ -15,6 +16,51 @@ const io     = new Server(server, {
   transports: ['polling', 'websocket'],   // polling first for Vercel compat
 });
 
+// ── Session & IP Tracking ─────────────────────────────────────────────────
+// In-memory store (resets on cold start; swap for Vercel KV for persistence)
+const visitors = new Map(); // sessionId -> { ip, firstSeen, lastSeen, hits, ua }
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
+
+function sessionMiddleware(req, res, next) {
+  const COOKIE = 'hk_sid';
+  const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+  // Parse cookies manually (no cookie-parser dep needed)
+  const rawCookies = req.headers.cookie || '';
+  const cookieMap  = Object.fromEntries(
+    rawCookies.split(';').map(c => c.trim().split('=').map(decodeURIComponent))
+  );
+
+  let sid = cookieMap[COOKIE];
+  if (!sid || !/^[0-9a-f]{32}$/.test(sid)) {
+    sid = crypto.randomBytes(16).toString('hex');
+  }
+
+  const ip  = getClientIp(req);
+  const now = new Date().toISOString();
+  const ua  = req.headers['user-agent'] || 'unknown';
+
+  if (visitors.has(sid)) {
+    const v = visitors.get(sid);
+    v.lastSeen = now;
+    v.hits    += 1;
+    if (!v.ips.includes(ip)) v.ips.push(ip); // track multiple IPs per session
+  } else {
+    visitors.set(sid, { sid, ips: [ip], firstSeen: now, lastSeen: now, hits: 1, ua });
+    console.log(`[Visitor] New session ${sid} from ${ip}`);
+  }
+
+  res.setHeader('Set-Cookie', `${COOKIE}=${sid}; Path=/; Max-Age=${COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax`);
+  req.sessionId = sid;
+  next();
+}
+
+app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -34,6 +80,17 @@ app.get('/api/market/:name', (req, res) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// ── Visitor Analytics ─────────────────────────────────────────────────────
+app.get('/api/visitors', (req, res) => {
+  const summary = {
+    totalUniqueSessions: visitors.size,
+    sessions: Array.from(visitors.values()).sort(
+      (a, b) => new Date(b.lastSeen) - new Date(a.lastSeen)
+    ),
+  };
+  res.json(summary);
+});
 
 // ── Socket.IO real-time pipeline ──────────────────────────────────────────
 io.on('connection', socket => {
